@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Philippines Business RPG</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1><i class="fas fa-flag"></i> Philippines Business RPG</h1>
+            <div id="player-info">
+                <div class="info-item">
+                    <i class="fas fa-peso-sign"></i>
+                    <span class="label">Money:</span>
+                    <span id="money" class="value">₱0</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-calendar-day"></i>
+                    <span class="label">Day:</span>
+                    <span id="day" class="value">1</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-level-up-alt"></i>
+                    <span class="label">Level:</span>
+                    <span id="player-level" class="value">1</span>
+                </div>
+            </div>
+        </header>
+
+        <div id="main-content">
+            <div id="stats-panel">
+                <h2><i class="fas fa-user-circle"></i> Your Status</h2>
+                <div id="current-activity">
+                    <div class="activity-info">
+                        <i class="fas fa-clock"></i>
+                        <span id="activity-status">Idle</span>
+                        <span id="activity-timer"></span>
+                    </div>
+                    <button id="cancel-activity-btn" class="btn-danger" style="display: none;"><i class="fas fa-times"></i> Cancel Activity</button>
+                </div>
+
+                <div id="skills-section">
+                    <h3><i class="fas fa-medal"></i> Skills</h3>
+                    <div id="skill-list">
+                        <!-- Skills will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="inventory-section">
+                    <h3><i class="fas fa-wallet"></i> Quick Stats</h3>
+                    <div class="item">Businesses: <span id="quick-businesses">0</span></div>
+                    <div class="item">Employees: <span id="quick-employees">0</span></div>
+                    <div class="item">Bayanihan: <span id="quick-bayanihan">0</span> pts</div>
+                </div>
+            </div>
+
+            <div id="main-panel">
+                <div id="tabs">
+                    <button class="tab-btn active" data-tab="employment">
+                        <i class="fas fa-briefcase"></i> Employment
+                    </button>
+                    <button class="tab-btn" data-tab="business">
+                        <i class="fas fa-store"></i> Business
+                    </button>
+                    <button class="tab-btn" data-tab="employees">
+                        <i class="fas fa-users"></i> Employees
+                    </button>
+                    <button class="tab-btn" data-tab="marketplace">
+                        <i class="fas fa-chart-line"></i> Market Place
+                    </button>
+                    <button class="tab-btn" data-tab="inventory">
+                        <i class="fas fa-boxes"></i> Inventory
+                    </button>
+                </div>
+
+                <div id="tab-content">
+                    <!-- Employment Tab -->
+                    <div class="tab-pane active" id="employment-tab">
+                        <h2><i class="fas fa-briefcase"></i> Employment Center</h2>
+                        <p>Choose a job to work and earn money to start your business empire.</p>
+                        
+                        <div class="job-filter-section">
+                            <input type="text" id="job-search" placeholder="Search jobs..." class="search-input">
+                            <select id="job-filter" class="filter-select">
+                                <option value="all">All Jobs</option>
+                                <option value="low">Low Pay (₱200/hr or less)</option>
+                                <option value="medium">Medium Pay (₱201-₱400/hr)</option>
+                                <option value="high">High Pay (₱401/hr and above)</option>
+                            </select>
+                        </div>
+                        
+                        <div id="job-list">
+                            <div class="job-card" data-job="encoder" data-pay="200">
+                                <div class="job-icon"><i class="fas fa-keyboard"></i></div>
+                                <h3><i class="fas fa-keyboard"></i> Encoder</h3>
+                                <p>Do data entry work. Good starting job with moderate pay.</p>
+                                <div class="job-stats">
+                                    <span class="job-pay"><i class="fas fa-peso-sign"></i> ₱200/hr</span>
+                                    <span class="job-skill"><i class="fas fa-user-graduate"></i> Encoder Skill</span>
+                                </div>
+                                <div class="job-actions">
+                                    <button class="job-duration-btn" data-duration="2">2 min (₱7)</button>
+                                    <button class="job-duration-btn" data-duration="60">1 hr (₱200)</button>
+                                    <button class="job-duration-btn" data-duration="240">4 hr (₱800)</button>
+                                    <button class="job-duration-btn" data-duration="480">8 hr (₱1,600)</button>
+                                    <button class="job-duration-btn" data-duration="720">12 hr (₱2,400)</button>
+                                </div>
+                            </div>
+
+                            <div class="job-card" data-job="fastfood" data-pay="300">
+                                <div class="job-icon"><i class="fas fa-hamburger"></i></div>
+                                <h3><i class="fas fa-hamburger"></i> Fast-food Worker</h3>
+                                <p>Work at a restaurant. Good for restaurant business skill.</p>
+                                <div class="job-stats">
+                                    <span class="job-pay"><i class="fas fa-peso-sign"></i> ₱300/hr</span>
+                                    <span class="job-skill"><i class="fas fa-user-graduate"></i> Fast-food Skill</span>
+                                </div>
+                                <div class="job-actions">
+                                    <button class="job-duration-btn" data-duration="2">2 min (₱10)</button>
+                                    <button class="job-duration-btn" data-duration="60">1 hr (₱300)</button>
+                                    <button class="job-duration-btn" data-duration="240">4 hr (₱1,200)</button>
+                                    <button class="job-duration-btn" data-duration="480">8 hr (₱2,400)</button>
+                                </div>
+                            </div>
+
+                            <div class="job-card" data-job="laborer" data-pay="400">
+                                <div class="job-icon"><i class="fas fa-hard-hat"></i></div>
+                                <h3><i class="fas fa-hard-hat"></i> Hard Laborer</h3>
+                                <p>Construction or factory work. Good for physical endurance.</p>
+                                <div class="job-stats">
+                                    <span class="job-pay"><i class="fas fa-peso-sign"></i> ₱400/hr</span>
+                                    <span class="job-skill"><i class="fas fa-user-graduate"></i> Laborer Skill</span>
+                                </div>
+                                <div class="job-actions">
+                                    <button class="job-duration-btn" data-duration="2">2 min (₱13)</button>
+                                    <button class="job-duration-btn" data-duration="240">4 hr (₱1,600)</button>
+                                    <button class="job-duration-btn" data-duration="480">8 hr (₱3,200)</button>
+                                    <button class="job-duration-btn" data-duration="720">12 hr (₱4,800)</button>
+                                </div>
+                            </div>
+
+                            <div class="job-card" data-job="sales" data-pay="350">
+                                <div class="job-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                                <h3><i class="fas fa-hand-holding-usd"></i> Sales/Merchandiser</h3>
+                                <p>Product placement and sales. Good for sari-sari store skill.</p>
+                                <div class="job-stats">
+                                    <span class="job-pay"><i class="fas fa-peso-sign"></i> ₱350/hr</span>
+                                    <span class="job-skill"><i class="fas fa-user-graduate"></i> Sales Skill</span>
+                                </div>
+                                <div class="job-actions">
+                                    <button class="job-duration-btn" data-duration="2">2 min (₱12)</button>
+                                    <button class="job-duration-btn" data-duration="60">1 hr (₱350)</button>
+                                    <button class="job-duration-btn" data-duration="240">4 hr (₱1,400)</button>
+                                    <button class="job-duration-btn" data-duration="480">8 hr (₱2,800)</button>
+                                </div>
+                            </div>
+
+                            <div class="job-card" data-job="cashier" data-pay="250">
+                                <div class="job-icon"><i class="fas fa-cash-register"></i></div>
+                                <h3><i class="fas fa-cash-register"></i> Cashier</h3>
+                                <p>Handle transactions. Good for money management skills.</p>
+                                <div class="job-stats">
+                                    <span class="job-pay"><i class="fas fa-peso-sign"></i> ₱250/hr</span>
+                                    <span class="job-skill"><i class="fas fa-user-graduate"></i> Cashier Skill</span>
+                                </div>
+                                <div class="job-actions">
+                                    <button class="job-duration-btn" data-duration="2">2 min (₱8)</button>
+                                    <button class="job-duration-btn" data-duration="60">1 hr (₱250)</button>
+                                    <button class="job-duration-btn" data-duration="240">4 hr (₱1,000)</button>
+                                    <button class="job-duration-btn" data-duration="480">8 hr (₱2,000)</button>
+                                </div>
+                            </div>
+
+                            <div class="job-card" data-job="stockman" data-pay="300">
+                                <div class="job-icon"><i class="fas fa-warehouse"></i></div>
+                                <h3><i class="fas fa-warehouse"></i> Stockman</h3>
+                                <p>Warehouse/Inventory work. Good for inventory management.</p>
+                                <div class="job-stats">
+                                    <span class="job-pay"><i class="fas fa-peso-sign"></i> ₱300/hr</span>
+                                    <span class="job-skill"><i class="fas fa-user-graduate"></i> Stockman Skill</span>
+                                </div>
+                                <div class="job-actions">
+                                    <button class="job-duration-btn" data-duration="2">2 min (₱10)</button>
+                                    <button class="job-duration-btn" data-duration="240">4 hr (₱1,200)</button>
+                                    <button class="job-duration-btn" data-duration="480">8 hr (₱2,400)</button>
+                                    <button class="job-duration-btn" data-duration="720">12 hr (₱3,600)</button>
+                                </div>
+                            </div>
+
+                            <div class="job-card" data-job="delivery" data-pay="450">
+                                <div class="job-icon"><i class="fas fa-shipping-fast"></i></div>
+                                <h3><i class="fas fa-shipping-fast"></i> Delivery Man</h3>
+                                <p>Food or package delivery. Good for logistics skills.</p>
+                                <div class="job-stats">
+                                    <span class="job-pay"><i class="fas fa-peso-sign"></i> ₱450/hr</span>
+                                    <span class="job-skill"><i class="fas fa-user-graduate"></i> Delivery Skill</span>
+                                </div>
+                                <div class="job-actions">
+                                    <button class="job-duration-btn" data-duration="2">2 min (₱15)</button>
+                                    <button class="job-duration-btn" data-duration="60">1 hr (₱450)</button>
+                                    <button class="job-duration-btn" data-duration="240">4 hr (₱1,800)</button>
+                                    <button class="job-duration-btn" data-duration="480">8 hr (₱3,600)</button>
+                                </div>
+                            </div>
+
+                            <div class="job-card" data-job="driver" data-pay="500">
+                                <div class="job-icon"><i class="fas fa-car"></i></div>
+                                <h3><i class="fas fa-car"></i> Driver</h3>
+                                <p>Tricycle, jeepney, or other vehicle driving.</p>
+                                <div class="job-stats">
+                                    <span class="job-pay"><i class="fas fa-peso-sign"></i> ₱500/hr</span>
+                                    <span class="job-skill"><i class="fas fa-user-graduate"></i> Driver Skill</span>
+                                </div>
+                                <div class="job-actions">
+                                    <button class="job-duration-btn" data-duration="2">2 min (₱17)</button>
+                                    <button class="job-duration-btn" data-duration="60">1 hr (₱500)</button>
+                                    <button class="job-duration-btn" data-duration="240">4 hr (₱2,000)</button>
+                                    <button class="job-duration-btn" data-duration="480">8 hr (₱4,000)</button>
+                                    <button class="job-duration-btn" data-duration="720">12 hr (₱6,000)</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Business Tab -->
+                    <div class="tab-pane" id="business-tab">
+                        <h2><i class="fas fa-store"></i> Business Management</h2>
+                        <p>Manage your business empire and expand your operations.</p>
+                        
+                        <div class="business-stats-bar">
+                            <div class="business-stat-card">
+                                <i class="fas fa-coins"></i>
+                                <h4>Total Daily Income</h4>
+                                <p id="total-daily-income">₱0/hr</p>
+                            </div>
+                            <div class="business-stat-card">
+                                <i class="fas fa-building"></i>
+                                <h4>Total Businesses</h4>
+                                <p id="total-businesses">0</p>
+                            </div>
+                            <div class="business-stat-card">
+                                <i class="fas fa-users"></i>
+                                <h4>Total Employees</h4>
+                                <p id="total-employees">0</p>
+                            </div>
+                        </div>
+                        
+                        <div id="business-actions">
+                            <div id="business-list">
+                                <!-- Business list will be populated by JavaScript -->
+                                <div class="empty-state"><i class="fas fa-store-slash"></i> No businesses yet. Get your first job and save up to start!</div>
+                            </div>
+                            
+                            <div id="business-start-section">
+                                <h3><i class="fas fa-plus-circle"></i> Start New Business</h3>
+                                <div class="start-business-grid">
+                                    <div class="business-type-card" data-business="sari">
+                                        <div class="business-icon"><i class="fas fa-store"></i></div>
+                                        <h4><i class="fas fa-store"></i> Mini Sari-sari Store</h4>
+                                        <p>Start with a small corner store</p>
+                                        <p class="cost"><i class="fas fa-peso-sign"></i> Cost: ₱5,000</p>
+                                        <button class="start-business-btn">
+                                            <i class="fas fa-play-circle"></i> Start Business
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="business-type-card" data-business="convenience">
+                                        <div class="business-icon"><i class="fas fa-shopping-cart"></i></div>
+                                        <h4><i class="fas fa-shopping-cart"></i> Convenience Store</h4>
+                                        <p>7-Eleven style format</p>
+                                        <p class="cost"><i class="fas fa-peso-sign"></i> Cost: ₱50,000</p>
+                                        <button class="start-business-btn" disabled>
+                                            <i class="fas fa-lock"></i> Unlock at Level 5
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="business-type-card" data-business="agrivet">
+                                        <div class="business-icon"><i class="fas fa-seedling"></i></div>
+                                        <h4><i class="fas fa-seedling"></i> Agrivet Store</h4>
+                                        <p>Animal feed, seeds, supplies</p>
+                                        <p class="cost"><i class="fas fa-peso-sign"></i> Cost: ₱30,000</p>
+                                        <button class="start-business-btn" disabled>
+                                            <i class="fas fa-lock"></i> Unlock at Level 10
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="business-type-card" data-business="beverage">
+                                        <div class="business-icon"><i class="fas fa-wine-bottle"></i></div>
+                                        <h4><i class="fas fa-wine-bottle"></i> Beverage Dealer</h4>
+                                        <p>Soft drinks, beer distribution</p>
+                                        <p class="cost"><i class="fas fa-peso-sign"></i> Cost: ₱75,000</p>
+                                        <button class="start-business-btn" disabled>
+                                            <i class="fas fa-lock"></i> Unlock at Level 15
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="business-type-card" data-business="department">
+                                        <div class="business-icon"><i class="fas fa-shopping-bags"></i></div>
+                                        <h4><i class="fas fa-shopping-bags"></i> Department Store</h4>
+                                        <p>Sell drygoods and household items</p>
+                                        <p class="cost"><i class="fas fa-peso-sign"></i> Cost: ₱200,000</p>
+                                        <button class="start-business-btn" disabled>
+                                            <i class="fas fa-lock"></i> Unlock at Level 20
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="business-type-card" data-business="gadget">
+                                        <div class="business-icon"><i class="fas fa-mobile-alt"></i></div>
+                                        <h4><i class="fas fa-mobile-alt"></i> Gadget Store</h4>
+                                        <p>Sell electronics and mobile phones</p>
+                                        <p class="cost"><i class="fas fa-peso-sign"></i> Cost: ₱150,000</p>
+                                        <button class="start-business-btn" disabled>
+                                            <i class="fas fa-lock"></i> Unlock at Level 18
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="business-type-card" data-business="restaurant">
+                                        <div class="business-icon"><i class="fas fa-utensils"></i></div>
+                                        <h4><i class="fas fa-utensils"></i> Restaurant</h4>
+                                        <p>Food service business</p>
+                                        <p class="cost"><i class="fas fa-peso-sign"></i> Cost: ₱100,000</p>
+                                        <button class="start-business-btn" disabled>
+                                            <i class="fas fa-lock"></i> Unlock at Level 12
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employees Tab -->
+                    <div class="tab-pane" id="employees-tab">
+                        <h2><i class="fas fa-users"></i> Employee Management</h2>
+                        <p>Hire employees to help run your businesses.</p>
+                        
+                        <div id="hire-employees">
+                            <div class="employee-header">
+                                <h3><i class="fas fa-user-plus"></i> Available Employees (Refreshing in <span id="refresh-timer">24h 0m</span>)</h3>
+                                <button id="refresh-employees" class="btn-secondary">
+                                    <i class="fas fa-sync-alt"></i> Use Bayanihan Points (50 pts)
+                                </button>
+                            </div>
+                            <div id="available-employees">
+                                <div class="employee-card">
+                                    <div class="employee-icon"><i class="fas fa-user"></i></div>
+                                    <h4>Jose (Level 1)</h4>
+                                    <p><i class="fas fa-star"></i> Specialty: Sari-sari Store</p>
+                                    <p><i class="fas fa-percentage"></i> Efficiency: +5% to sari-sari profits</p>
+                                    <button class="hire-employee-btn" data-employee="1">
+                                        <i class="fas fa-hand-holding-usd"></i> Hire for ₱2,000
+                                    </button>
+                                </div>
+                                <div class="employee-card">
+                                    <div class="employee-icon"><i class="fas fa-user"></i></div>
+                                    <h4>Maria (Level 1)</h4>
+                                    <p><i class="fas fa-star"></i> Specialty: General</p>
+                                    <p><i class="fas fa-percentage"></i> Efficiency: +3% to all profits</p>
+                                    <button class="hire-employee-btn" data-employee="2">
+                                        <i class="fas fa-hand-holding-usd"></i> Hire for ₱2,500
+                                    </button>
+                                </div>
+                                <div class="employee-card">
+                                    <div class="employee-icon"><i class="fas fa-user"></i></div>
+                                    <h4>Carlos (Level 1)</h4>
+                                    <p><i class="fas fa-star"></i> Specialty: Delivery</p>
+                                    <p><i class="fas fa-percentage"></i> Efficiency: +8% to delivery business</p>
+                                    <button class="hire-employee-btn" data-employee="3">
+                                        <i class="fas fa-hand-holding-usd"></i> Hire for ₱3,000
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="your-employees">
+                            <h3><i class="fas fa-users"></i> Your Employees</h3>
+                            <div id="employee-list">
+                                <div class="empty-state"><i class="fas fa-user-slash"></i> No employees hired yet.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Marketplace Tab -->
+                    <div class="tab-pane" id="marketplace-tab">
+                        <h2><i class="fas fa-chart-line"></i> Market Place</h2>
+                        <p>Trade stocks and cryptocurrencies in the Philippine financial markets.</p>
+                        
+                        <div class="mini-games-section">
+                            <h3><i class="fas fa-gamepad"></i> Earn While You Wait</h3>
+                            <p>Play mini-games while your jobs are running to earn extra income!</p>
+                            <div class="mini-games-grid">
+                                <div class="mini-game-card" data-game="math">
+                                    <div class="mini-game-icon"><i class="fas fa-calculator"></i></div>
+                                    <h4><i class="fas fa-calculator"></i> Math Puzzle</h4>
+                                    <p>Solve math problems for quick cash</p>
+                                    <button class="start-mini-game-btn" data-game="math">
+                                        <i class="fas fa-play-circle"></i> Play Now
+                                    </button>
+                                </div>
+                                <div class="mini-game-card" data-game="reaction">
+                                    <div class="mini-game-icon"><i class="fas fa-bolt"></i></div>
+                                    <h4><i class="fas fa-bolt"></i> Reaction Time</h4>
+                                    <p>Test your reflexes</p>
+                                    <button class="start-mini-game-btn" data-game="reaction">
+                                        <i class="fas fa-play-circle"></i> Play Now
+                                    </button>
+                                </div>
+                                <div class="mini-game-card" data-game="trivia">
+                                    <div class="mini-game-icon"><i class="fas fa-question-circle"></i></div>
+                                    <h4><i class="fas fa-question-circle"></i> Filipino Trivia</h4>
+                                    <p>Show your knowledge</p>
+                                    <button class="start-mini-game-btn" data-game="trivia">
+                                        <i class="fas fa-play-circle"></i> Play Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="marketplace-content">
+                            <div id="marketplace-nav">
+                                <button class="market-nav-btn active" data-market="stocks">
+                                    <i class="fas fa-chart-line"></i> Stocks
+                                </button>
+                                <button class="market-nav-btn" data-market="crypto">
+                                    <i class="fas fa-coins"></i> Cryptocurrency
+                                </button>
+                            </div>
+                            
+                            <div id="stocks-content" class="market-content active">
+                                <h3><i class="fas fa-building"></i> Philippine Stock Market</h3>
+                                <div class="portfolio-summary">
+                                    <div class="portfolio-item">
+                                        <i class="fas fa-wallet"></i>
+                                        <p>Portfolio Value: ₱<span id="portfolio-value">0</span></p>
+                                    </div>
+                                    <div class="portfolio-item">
+                                        <i class="fas fa-chart-line"></i>
+                                        <p>Stocks Holdings: ₱<span id="stocks-value">0</span></p>
+                                    </div>
+                                </div>
+                                
+                                <div id="stocks-list">
+                                    <!-- Stocks will be populated by JavaScript -->
+                                </div>
+                                
+                                <div id="stocks-portfolio">
+                                    <h4><i class="fas fa-folder-open"></i> Your Stock Portfolio</h4>
+                                    <div id="stocks-portfolio-list">
+                                        <!-- Portfolio will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="crypto-content" class="market-content">
+                                <h3><i class="fas fa-coins"></i> Cryptocurrency Market</h3>
+                                <div class="portfolio-summary">
+                                    <div class="portfolio-item">
+                                        <i class="fas fa-wallet"></i>
+                                        <p>Portfolio Value: ₱<span id="crypto-portfolio-value">0</span></p>
+                                    </div>
+                                    <div class="portfolio-item">
+                                        <i class="fas fa-coins"></i>
+                                        <p>Crypto Holdings: ₱<span id="crypto-value">0</span></p>
+                                    </div>
+                                </div>
+                                
+                                <div id="crypto-list">
+                                    <!-- Cryptos will be populated by JavaScript -->
+                                </div>
+                                
+                                <div id="crypto-portfolio">
+                                    <h4><i class="fas fa-folder-open"></i> Your Crypto Portfolio</h4>
+                                    <div id="crypto-portfolio-list">
+                                        <!-- Portfolio will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="transaction-history">
+                                <h4><i class="fas fa-history"></i> Transaction History</h4>
+                                <div id="transaction-list">
+                                    <!-- Transactions will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mini-game Modal -->
+                    <div id="mini-game-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 id="mini-game-title"><i class="fas fa-gamepad"></i> Mini Game</h3>
+                                <span class="close-modal"><i class="fas fa-times"></i></span>
+                            </div>
+                            <div class="modal-body" id="mini-game-content">
+                                <!-- Mini-game content will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    
+                    <!-- Inventory Tab -->
+                    <div class="tab-pane" id="inventory-tab">
+                        <h2><i class="fas fa-boxes"></i> Inventory & Savings</h2>
+                        <p>Track your resources and savings for business expansion.</p>
+                        
+                        <div id="inventory-content">
+                            <div class="inventory-section">
+                                <h3><i class="fas fa-money-bill-wave"></i> Current Money</h3>
+                                <div class="money-display">₱<span id="inventory-money">0</span></div>
+                                <div class="money-actions">
+                                    <button id="save-money-btn" class="btn-secondary">
+                                        <i class="fas fa-piggy-bank"></i> Save to Account
+                                    </button>
+                                    <button id="withdraw-money-btn" class="btn-secondary">
+                                        <i class="fas fa-hand-holding-usd"></i> Withdraw Funds
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="inventory-section">
+                                <h3><i class="fas fa-box-open"></i> Item Inventory</h3>
+                                <div id="item-list">
+                                    <div class="item"><i class="fas fa-piggy-bank"></i> Savings Account: ₱<span id="savings-amount">0</span></div>
+                                    <div class="item"><i class="fas fa-id-card"></i> Business Licenses: <span id="licenses-count">0</span></div>
+                                    <div class="item"><i class="fas fa-tools"></i> Equipment: <span id="equipment-count">0</span></div>
+                                    <div class="item"><i class="fas fa-medal"></i> Bayanihan Points: <span id="bayanihan-points">0</span></div>
+                                </div>
+                            </div>
+                            
+                            <div class="inventory-section">
+                                <h3><i class="fas fa-handshake"></i> PALUGAN (Cooperative)</h3>
+                                <div class="item"><i class="fas fa-users"></i> Members: <span id="palugan-members">0</span></div>
+                                <div class="item"><i class="fas fa-peso-sign"></i> Funds: ₱<span id="palugan-funds">0</span></div>
+                                <div class="item"><i class="fas fa-user"></i> Your Status: <span id="palugan-status">Not a member</span></div>
+                                <button id="join-palugan-btn" class="btn-secondary">
+                                    <i class="fas fa-sign-in-alt"></i> Join PALUGAN (₱2,000)
+                                </button>
+                                <div class="contribution-section">
+                                    <input type="number" id="palugan-contribution" placeholder="Amount to contribute" min="100" value="500" class="contribution-input">
+                                    <button id="contribute-palugan-btn" class="btn-secondary">
+                                        <i class="fas fa-hand-holding-usd"></i> Contribute
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/game.js"></script>
+</body>
+</html>
