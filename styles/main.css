@@ -909,6 +909,17 @@ body {
     box-shadow: var(--shadow-accent);
 }
 
+.shop-item.locked-item {
+    opacity: 0.6;
+    border-color: var(--border-color);
+    background: var(--bg-surface);
+}
+
+.shop-item.locked-item:hover {
+    border-color: var(--border-color);
+    box-shadow: none;
+}
+
 .shop-item-icon {
     font-size: 48px;
     margin-bottom: var(--spacing-md);

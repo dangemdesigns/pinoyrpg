@@ -134,11 +134,37 @@ class UIController {
             document.getElementById('player-gold-invest').textContent = Math.floor(game.player.financials.cash).toLocaleString();
         }
 
-        investmentsGrid.innerHTML = game.investmentOptions.map(investment => {
+        // Show emergency fund status banner
+        const emergencyFundProgress = Math.min((game.player.financials.emergencyFund / game.emergencyFundRequired) * 100, 100);
+        const emergencyBanner = !game.hasEmergencyFund ? `
+            <div style="background: linear-gradient(135deg, #FF4757 0%, #FF6348 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                <div style="font-size: 14px; font-weight: 600; color: white; margin-bottom: 8px;">⚠️ EMERGENCY FUND REQUIRED</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">
+                    Build ₱5,000 emergency fund first by investing in Savings Account
+                </div>
+                <div style="background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; height: 8px;">
+                    <div style="background: #2ED573; height: 100%; width: ${emergencyFundProgress}%;"></div>
+                </div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 8px;">
+                    ₱${game.player.financials.emergencyFund.toLocaleString()} / ₱${game.emergencyFundRequired.toLocaleString()}
+                </div>
+            </div>
+        ` : `
+            <div style="background: linear-gradient(135deg, #2ED573 0%, #26D07C 100%); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                <div style="font-size: 13px; font-weight: 600; color: white;">✅ Emergency Fund Ready: ₱${game.player.financials.emergencyFund.toLocaleString()}</div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.9); margin-top: 5px;">
+                    All investments unlocked! Keep emergency fund topped up.
+                </div>
+            </div>
+        `;
+
+        investmentsGrid.innerHTML = emergencyBanner + game.investmentOptions.map(investment => {
             const canAfford = game.player.financials.cash >= investment.minInvestment;
+            const isSavingsAccount = investment.id === 'savings-account';
+            const isLocked = !isSavingsAccount && !game.hasEmergencyFund;
 
             return `
-                <div class="shop-item">
+                <div class="shop-item ${isLocked ? 'locked-item' : ''}">
                     <div class="shop-item-icon">${investment.icon}</div>
                     <div class="shop-item-name">${investment.name}</div>
                     <div class="shop-item-desc">${investment.description}</div>
@@ -146,11 +172,21 @@ class UIController {
                     <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">
                         ${investment.expectedReturn}% returns | ${investment.risk} risk
                     </div>
-                    <button class="btn-primary btn-small"
-                            onclick="ui.showInvestmentModal('${investment.id}')"
-                            ${!canAfford ? 'disabled' : ''}>
-                        Invest
-                    </button>
+                    ${isLocked ? `
+                        <div style="background: rgba(255,71,87,0.1); padding: 8px; border-radius: 6px; margin-bottom: 8px;">
+                            <div style="font-size: 10px; color: #FF4757; font-weight: 600;">🔒 LOCKED</div>
+                            <div style="font-size: 9px; color: var(--text-secondary);">Build emergency fund first</div>
+                        </div>
+                        <button class="btn-secondary btn-small" disabled>
+                            Locked
+                        </button>
+                    ` : `
+                        <button class="btn-primary btn-small"
+                                onclick="ui.showInvestmentModal('${investment.id}')"
+                                ${!canAfford ? 'disabled' : ''}>
+                            ${isSavingsAccount ? 'Add to Emergency Fund' : 'Invest'}
+                        </button>
+                    `}
                 </div>
             `;
         }).join('');

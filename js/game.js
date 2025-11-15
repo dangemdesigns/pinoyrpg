@@ -29,6 +29,14 @@ class PinoyRPG {
         this.achievements_100k = false;
         this.achievements_1m = false;
 
+        // Emergency Fund Requirement
+        this.emergencyFundRequired = 5000;
+        this.hasEmergencyFund = false;
+
+        // Random Event System
+        this.lastEventTime = Date.now();
+        this.eventCooldown = 120000; // 2 minutes minimum between events
+
         // Action-based progression (not time-based)
         this.workEnergy = 100;
         this.maxWorkEnergy = 100;
@@ -48,8 +56,162 @@ class PinoyRPG {
         this.initializeGoals();
         this.updateGuidance();
         this.startEnergyRegen();
+        this.startRandomEvents();
         this.addActivityLog('Welcome to your financial journey, Kababayan!', '🎮');
         this.addNotification('Click WORK to earn money!', '💼');
+    }
+
+    createFilipinoScenarios() {
+        return [
+            {
+                id: 'house-repair',
+                title: 'House Repair Needed',
+                description: 'Your roof is leaking! You need to repair it before the rainy season gets worse.',
+                cost: 5000,
+                icon: '🏠'
+            },
+            {
+                id: 'medical-emergency',
+                title: 'Family Medical Emergency',
+                description: 'A family member got sick and needs medicine from the pharmacy.',
+                cost: 3000,
+                icon: '🏥'
+            },
+            {
+                id: 'appliance-breakdown',
+                title: 'Refrigerator Broke Down',
+                description: 'Your refrigerator stopped working. You need to repair it or food will spoil.',
+                cost: 4000,
+                icon: '❄️'
+            },
+            {
+                id: 'phone-broken',
+                title: 'Phone Broke',
+                description: 'You dropped your phone and the screen cracked. Need to repair it for work.',
+                cost: 2500,
+                icon: '📱'
+            },
+            {
+                id: 'motor-repair',
+                title: 'Motorcycle Repair',
+                description: 'Your motorcycle needs urgent repair to get to work.',
+                cost: 3500,
+                icon: '🏍️'
+            },
+            {
+                id: 'hospital-bill',
+                title: 'Emergency Hospital Bill',
+                description: 'Unexpected hospitalization - need to pay the bill.',
+                cost: 6000,
+                icon: '🚑'
+            },
+            {
+                id: 'wedding-gift',
+                title: 'Family Wedding (Abuloy)',
+                description: 'A close relative is getting married. You need to give abuloy.',
+                cost: 2000,
+                icon: '💒'
+            },
+            {
+                id: 'funeral-expense',
+                title: 'Funeral Expense (Libing)',
+                description: 'A relative passed away. You need to contribute to funeral expenses.',
+                cost: 3000,
+                icon: '🕯️'
+            },
+            {
+                id: 'school-emergency',
+                title: 'School Project Materials',
+                description: 'Your nephew needs materials for a school project urgently.',
+                cost: 1500,
+                icon: '📚'
+            },
+            {
+                id: 'flooding',
+                title: 'Flood Damage',
+                description: 'Heavy rain flooded your area. Need to replace damaged items.',
+                cost: 4500,
+                icon: '🌊'
+            }
+        ];
+    }
+
+    startRandomEvents() {
+        // Check for random events every 30 seconds
+        setInterval(() => {
+            this.checkRandomEvent();
+        }, 30000);
+    }
+
+    checkRandomEvent() {
+        // Don't trigger if no emergency fund
+        if (this.player.financials.emergencyFund < this.emergencyFundRequired) {
+            return;
+        }
+
+        // Check cooldown
+        const timeSinceLastEvent = Date.now() - this.lastEventTime;
+        if (timeSinceLastEvent < this.eventCooldown) {
+            return;
+        }
+
+        // Random chance (10% every check)
+        if (Math.random() > 0.1) {
+            return;
+        }
+
+        // Make sure player has buffer (won't go negative)
+        const totalMoney = this.player.financials.cash + this.player.financials.emergencyFund;
+        if (totalMoney < 10000) { // Need at least ₱10k buffer
+            return;
+        }
+
+        // Trigger random scenario
+        this.triggerRandomScenario();
+    }
+
+    triggerRandomScenario() {
+        const scenarios = this.createFilipinoScenarios();
+        const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+
+        // Deduct from emergency fund first, then cash if needed
+        let remaining = scenario.cost;
+
+        if (this.player.financials.emergencyFund >= remaining) {
+            this.player.financials.emergencyFund -= remaining;
+        } else {
+            remaining -= this.player.financials.emergencyFund;
+            this.player.financials.emergencyFund = 0;
+            this.player.financials.cash = Math.max(0, this.player.financials.cash - remaining);
+        }
+
+        // Update emergency fund status
+        this.checkEmergencyFundStatus();
+
+        // Show notification
+        this.showAchievement(`${scenario.title}!`, scenario.icon);
+        this.addNotification(`${scenario.description} -₱${scenario.cost.toLocaleString()}`, scenario.icon);
+        this.addActivityLog(`Emergency: ${scenario.title} (-₱${scenario.cost.toLocaleString()})`, scenario.icon);
+
+        // Update last event time
+        this.lastEventTime = Date.now();
+
+        // Update UI
+        this.calculateNetWorth();
+        this.updateUI();
+        this.updateGuidance();
+    }
+
+    checkEmergencyFundStatus() {
+        const wasReady = this.hasEmergencyFund;
+        this.hasEmergencyFund = this.player.financials.emergencyFund >= this.emergencyFundRequired;
+
+        // Notify if status changed
+        if (wasReady && !this.hasEmergencyFund) {
+            this.addNotification('⚠️ Emergency fund below ₱5,000! Investments locked until replenished.', '🚨');
+        } else if (!wasReady && this.hasEmergencyFund) {
+            this.addNotification('✅ Emergency fund ready! All investments unlocked.', '🎉');
+        }
     }
 
     createPlayer() {
@@ -712,6 +874,12 @@ class PinoyRPG {
         const option = this.investmentOptions.find(opt => opt.id === investmentId);
         if (!option) return;
 
+        // Check emergency fund requirement (except for Savings Account)
+        if (investmentId !== 'savings-account' && !this.hasEmergencyFund) {
+            this.addNotification('🚨 Build ₱5,000 emergency fund first! Invest in Savings Account.', '⚠️');
+            return;
+        }
+
         if (amount < option.minInvestment) {
             this.addNotification(`Minimum investment: ₱${option.minInvestment.toLocaleString()}`, '❌');
             return;
@@ -724,28 +892,42 @@ class PinoyRPG {
 
         this.player.financials.cash -= amount;
 
-        const investment = {
-            id: Date.now(),
-            type: investmentId,
-            name: option.name,
-            amount: amount,
-            initialAmount: amount,
-            totalReturns: 0,
-            startTime: Date.now()
-        };
+        // If Savings Account, add to emergency fund
+        if (investmentId === 'savings-account') {
+            this.player.financials.emergencyFund += amount;
+            this.checkEmergencyFundStatus();
+            this.addNotification(`Added ₱${amount.toLocaleString()} to Emergency Fund`, option.icon);
+            this.addActivityLog(`Emergency Fund: +₱${amount.toLocaleString()}`, option.icon);
 
-        this.investments.push(investment);
+            if (this.hasEmergencyFund && this.player.financials.emergencyFund === this.emergencyFundRequired) {
+                this.showAchievement('Emergency Fund Complete! 🎉', '💰');
+                this.addNotification('🎉 All investments are now unlocked!', '✅');
+            }
+        } else {
+            // Regular investment
+            const investment = {
+                id: Date.now(),
+                type: investmentId,
+                name: option.name,
+                amount: amount,
+                initialAmount: amount,
+                totalReturns: 0,
+                startTime: Date.now()
+            };
 
-        this.addNotification(`Invested ₱${amount.toLocaleString()} in ${option.name}`, option.icon);
-        this.addActivityLog(`New investment: ${option.name}`, option.icon);
+            this.investments.push(investment);
 
-        // Show achievement for first investment
-        if (this.investments.length === 1) {
-            this.showAchievement('First Investment! 📈', '🎉');
+            this.addNotification(`Invested ₱${amount.toLocaleString()} in ${option.name}`, option.icon);
+            this.addActivityLog(`New investment: ${option.name}`, option.icon);
+
+            // Show achievement for first investment
+            if (this.investments.length === 1) {
+                this.showAchievement('First Investment! 📈', '🎉');
+            }
+
+            // Update goal
+            this.updateGoalProgress('first-investment', 1);
         }
-
-        // Update goal
-        this.updateGoalProgress('first-investment', 1);
 
         this.calculateNetWorth();
         this.updateUI();
@@ -1154,7 +1336,7 @@ class PinoyRPG {
 
         setTextIfExists('portfolio-networth', '₱' + Math.floor(this.player.financials.totalNetWorth).toLocaleString());
         setTextIfExists('portfolio-cash', Math.floor(this.player.financials.cash).toLocaleString());
-        setTextIfExists('portfolio-savings', Math.floor(this.player.financials.savings).toLocaleString());
+        setTextIfExists('portfolio-emergency', Math.floor(this.player.financials.emergencyFund).toLocaleString());
         setTextIfExists('portfolio-investments', Math.floor(investmentsValue).toLocaleString());
         setTextIfExists('portfolio-businesses', Math.floor(businessesValue).toLocaleString());
 
