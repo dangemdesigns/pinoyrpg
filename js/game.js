@@ -29,6 +29,10 @@ class PinoyRPG {
         this.paused = false;
         this.monthTimer = null;
 
+        // Achievement flags
+        this.achievements_100k = false;
+        this.achievements_1m = false;
+
         this.init();
     }
 
@@ -37,6 +41,7 @@ class PinoyRPG {
         this.updateUI();
         this.startMonthTimer();
         this.initializeGoals();
+        this.updateGuidance();
         this.addActivityLog('Welcome to your financial journey, Kababayan!', '🎮');
         this.addNotification('Start your journey to financial freedom!', '🏝️');
     }
@@ -568,6 +573,9 @@ class PinoyRPG {
 
         this.addActivityLog(`Month ${this.gameStats.monthsPlayed} completed`, '📅');
         this.addNotification(`New month! Check your finances.`, '📅');
+
+        // Update guidance
+        this.updateGuidance();
     }
 
     processMonthlySalary() {
@@ -796,7 +804,14 @@ class PinoyRPG {
 
         this.addNotification(`New job: ${job.title}!`, '🎉');
         this.addActivityLog(`Started working as ${job.title}`, '💼');
+
+        // Show achievement
+        if (job.salary >= 25000) {
+            this.showAchievement(`New Career: ${job.title}!`, '💼');
+        }
+
         this.updateUI();
+        this.updateGuidance();
         this.saveGame();
     }
 
@@ -831,11 +846,17 @@ class PinoyRPG {
         this.addNotification(`Invested ₱${amount.toLocaleString()} in ${option.name}`, option.icon);
         this.addActivityLog(`New investment: ${option.name}`, option.icon);
 
+        // Show achievement for first investment
+        if (this.investments.length === 1) {
+            this.showAchievement('First Investment! 📈', '🎉');
+        }
+
         // Update goal
         this.updateGoalProgress('first-investment', 1);
 
         this.calculateNetWorth();
         this.updateUI();
+        this.updateGuidance();
         this.saveGame();
     }
 
@@ -866,11 +887,17 @@ class PinoyRPG {
         this.addNotification(`Started business: ${business.name}!`, business.icon);
         this.addActivityLog(`Opened ${business.name}`, business.icon);
 
+        // Show achievement for first business
+        if (this.businesses.length === 1) {
+            this.showAchievement('First Business! 🏪', '🎉');
+        }
+
         // Update goal
         this.updateGoalProgress('first-business', 1);
 
         this.calculateNetWorth();
         this.updateUI();
+        this.updateGuidance();
         this.saveGame();
     }
 
@@ -932,6 +959,16 @@ class PinoyRPG {
         netWorth -= this.player.financials.debt;
 
         this.player.financials.totalNetWorth = Math.floor(netWorth);
+
+        // Check for net worth achievements
+        if (netWorth >= 100000 && !this.achievements_100k) {
+            this.showAchievement('₱100,000 Net Worth! 💎', '🎉');
+            this.achievements_100k = true;
+        }
+        if (netWorth >= 1000000 && !this.achievements_1m) {
+            this.showAchievement('MILLIONAIRE! ₱1,000,000! 💰', '🏆');
+            this.achievements_1m = true;
+        }
 
         return netWorth;
     }
@@ -1278,6 +1315,73 @@ class PinoyRPG {
         if (confirm('Are you sure you want to reset your progress? This cannot be undone!')) {
             localStorage.removeItem('pinoyrpg_save');
             location.reload();
+        }
+    }
+
+    // === GUIDANCE SYSTEM ===
+    updateGuidance() {
+        const guidance = document.getElementById('guidance-text');
+        const progress = document.getElementById('guidance-progress');
+
+        if (!guidance) return;
+
+        let message = '';
+        let progressPercent = 0;
+
+        // Smart guidance based on player progress
+        if (this.gameStats.monthsPlayed === 0) {
+            message = '💵 Wait for your first salary! Each month = 30 seconds.';
+            progressPercent = 0;
+        } else if (this.player.currentJob.title === 'Minimum Wage Worker') {
+            message = '💼 Get a better job! Click <strong>Career</strong> and apply for Call Center Agent (₱25k/month)';
+            progressPercent = 10;
+        } else if (this.businesses.length === 0 && this.player.financials.cash >= 15000) {
+            message = '🏪 You have enough cash! Click <strong>Business</strong> and start a Sari-Sari Store!';
+            progressPercent = 30;
+        } else if (this.investments.length === 0 && this.player.financials.cash >= 5000) {
+            message = '📈 Start investing! Click <strong>Investments</strong> and try Pag-IBIG MP2 (₱500 min)';
+            progressPercent = 40;
+        } else if (this.player.financials.emergencyFund === 0 && this.player.financials.cash >= 10000) {
+            message = '🆘 Build emergency fund! Save ₱72,000 for 6 months expenses (check Goals)';
+            progressPercent = 50;
+        } else if (this.player.financials.totalNetWorth < 100000) {
+            message = '💎 Keep growing! Net worth: ₱' + Math.floor(this.player.financials.totalNetWorth).toLocaleString() + ' / ₱100,000';
+            progressPercent = (this.player.financials.totalNetWorth / 100000) * 100;
+        } else if (this.player.financials.totalNetWorth < 1000000) {
+            message = '💰 Millionaire path! Net worth: ₱' + Math.floor(this.player.financials.totalNetWorth).toLocaleString() + ' / ₱1M';
+            progressPercent = (this.player.financials.totalNetWorth / 1000000) * 100;
+        } else {
+            const passiveIncome = this.getPassiveIncome();
+            const expenses = this.player.financials.monthlyExpenses;
+            if (passiveIncome < expenses) {
+                message = '🎯 Almost there! Passive: ₱' + passiveIncome.toLocaleString() + ' / ₱' + expenses.toLocaleString() + ' needed';
+                progressPercent = (passiveIncome / expenses) * 100;
+            } else {
+                message = '🎉 FINANCIAL FREEDOM ACHIEVED! You win! Passive income > Expenses!';
+                progressPercent = 100;
+                this.showAchievement('🏆 FINANCIAL FREEDOM ACHIEVED!', '🎉');
+            }
+        }
+
+        guidance.innerHTML = message;
+        if (progress) {
+            progress.style.width = Math.min(progressPercent, 100) + '%';
+        }
+    }
+
+    showAchievement(text, icon = '🎉') {
+        const popup = document.getElementById('achievement-popup');
+        const textElem = document.getElementById('achievement-text');
+        const iconElem = popup.querySelector('.achievement-icon');
+
+        if (popup && textElem && iconElem) {
+            textElem.textContent = text;
+            iconElem.textContent = icon;
+            popup.classList.add('show');
+
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 4000);
         }
     }
 }

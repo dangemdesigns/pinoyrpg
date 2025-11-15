@@ -1181,3 +1181,330 @@ body {
 .loading {
     animation: pulse 1.5s ease-in-out infinite;
 }
+
+/* ===== Tutorial Modal ===== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
+}
+
+.modal {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--accent-primary);
+    box-shadow: 0 20px 60px rgba(255, 0, 127, 0.3);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.tutorial-modal {
+    max-width: 700px;
+}
+
+.modal-header {
+    padding: var(--spacing-xl);
+    border-bottom: 1px solid var(--divider-color);
+    background: linear-gradient(135deg, var(--bg-surface), var(--bg-elevated));
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.modal-body {
+    padding: var(--spacing-xl);
+    color: var(--text-primary);
+}
+
+.modal-footer {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-top: 1px solid var(--divider-color);
+    background: var(--bg-elevated);
+}
+
+/* ===== Guidance Panel ===== */
+.guidance-panel {
+    position: fixed;
+    bottom: 20px;
+    right: calc(var(--sidebar-right-width) + 40px);
+    width: 320px;
+    background: var(--bg-surface);
+    border: 2px solid var(--accent-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    animation: slideInRight 0.4s ease;
+    transition: all var(--transition-normal);
+}
+
+.guidance-panel.hidden {
+    transform: translateX(400px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.guidance-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: linear-gradient(135deg, var(--accent-primary), #CC0066);
+    color: white;
+}
+
+.guidance-icon {
+    font-size: 20px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.guidance-title {
+    flex: 1;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.guidance-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: opacity var(--transition-fast);
+}
+
+.guidance-close:hover {
+    opacity: 1;
+}
+
+.guidance-body {
+    padding: var(--spacing-lg);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    min-height: 60px;
+}
+
+.guidance-progress {
+    height: 4px;
+    background: var(--bg-elevated);
+    overflow: hidden;
+}
+
+.guidance-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+    width: 0%;
+    transition: width 1s linear;
+}
+
+/* ===== Achievement Popup ===== */
+.achievement-popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--accent-primary), #CC0066);
+    color: white;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    box-shadow: 0 10px 40px rgba(255, 0, 127, 0.5);
+    z-index: 10000;
+    transform: translateX(500px);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.achievement-popup.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.achievement-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.achievement-icon {
+    font-size: 32px;
+    animation: bounceIn 0.6s ease;
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.achievement-text {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+/* ===== Tooltips ===== */
+.tooltip {
+    position: absolute;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    border: 1px solid var(--accent-primary);
+    box-shadow: var(--shadow-md);
+    z-index: 10001;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* ===== Pulsing Hints ===== */
+.pulse-hint {
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 0 rgba(255, 0, 127, 0);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
+    }
+}
+
+/* ===== Responsive Adjustments for Guidance ===== */
+@media (max-width: 1400px) {
+    .guidance-panel {
+        right: 20px;
+        width: 280px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .guidance-panel {
+        bottom: 80px;
+        right: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .guidance-panel {
+        width: calc(100% - 40px);
+        right: 20px;
+        left: 20px;
+    }
+    
+    .modal {
+        width: 95%;
+    }
+}
+
+/* ===== Button Enhancements ===== */
+.btn-primary,
+.btn-secondary {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::after,
+.btn-secondary::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-primary:active::after,
+.btn-secondary:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* ===== Bigger buttons for better UX ===== */
+.shop-item .btn-primary,
+.shop-item .btn-secondary {
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 100px;
+}
+
+/* ===== Progress bars enhancements ===== */
+.stat-bar {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== Card hover effects ===== */
+.shop-item {
+    transition: all var(--transition-normal);
+    cursor: pointer;
+}
+
+.shop-item:hover {
+    transform: translateY(-4px);
+}
+
+.current-job {
+    border-color: var(--success-color) !important;
+    box-shadow: 0 0 20px rgba(46, 213, 115, 0.3);
+}
