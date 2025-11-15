@@ -1723,56 +1723,64 @@ class PinoyRPG {
         cryptoGrid.innerHTML = this.cryptoMarket.cryptoData.map(crypto => {
             const priceChangeClass = crypto.priceChange > 0 ? 'positive' : crypto.priceChange < 0 ? 'negative' : 'neutral';
             const priceChangeIcon = crypto.priceChange > 0 ? '📈' : crypto.priceChange < 0 ? '📉' : '➖';
+            const borderColor = crypto.priceChange > 0 ? '#22C55E' : crypto.priceChange < 0 ? '#EF4444' : 'var(--border-color)';
 
             return `
-                <div style="padding: 20px; border: 2px solid var(--border); border-radius: 12px; background: var(--card-bg); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+                <div style="padding: 24px; border: 3px solid ${borderColor}; border-radius: 16px; background: var(--card-bg); box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 2px solid var(--border-color);">
                         <div>
-                            <div style="font-size: 24px; font-weight: 700; color: var(--primary);">${crypto.symbol}</div>
-                            <div style="font-size: 14px; color: var(--text-secondary);">${crypto.name}</div>
+                            <div style="font-size: 26px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px;">${crypto.symbol}</div>
+                            <div style="font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-top: 2px;">${crypto.name}</div>
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 14px; color: var(--text-tertiary); margin-bottom: 4px;">${priceChangeIcon}</div>
-                            <div style="font-size: 16px; font-weight: 600; color: ${priceChangeClass === 'positive' ? 'var(--success)' : priceChangeClass === 'negative' ? 'var(--danger)' : 'var(--text-tertiary)'};">
+                        <div style="text-align: right; background: ${priceChangeClass === 'positive' ? 'rgba(34, 197, 94, 0.15)' : priceChangeClass === 'negative' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(128, 128, 128, 0.15)'}; padding: 8px 12px; border-radius: 8px;">
+                            <div style="font-size: 18px; margin-bottom: 2px;">${priceChangeIcon}</div>
+                            <div style="font-size: 15px; font-weight: 700; color: ${priceChangeClass === 'positive' ? '#22C55E' : priceChangeClass === 'negative' ? '#EF4444' : 'var(--text-tertiary)'};">
                                 ${crypto.priceChange >= 0 ? '+' : ''}${crypto.priceChange.toFixed(2)}%
                             </div>
                         </div>
                     </div>
 
-                    <div style="margin-bottom: 15px;">
-                        <div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 4px;">💎 Your Balance</div>
-                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${crypto.balance.toFixed(8)} ${crypto.symbol}</div>
+                    <div style="background: var(--bg-secondary); padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">💎 Your Balance</div>
+                        <div style="font-size: 15px; font-weight: 700; color: var(--text-primary); font-family: monospace;">${crypto.balance.toFixed(8)} ${crypto.symbol}</div>
                     </div>
 
-                    <div style="margin-bottom: 15px;">
-                        <div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 4px;">💰 Current Price</div>
-                        <div style="font-size: 18px; font-weight: 700; color: var(--text-primary);">₱${crypto.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                    <div style="background: var(--bg-secondary); padding: 12px; border-radius: 10px; margin-bottom: 18px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">💰 Current Price</div>
+                        <div style="font-size: 18px; font-weight: 800; color: var(--primary); font-family: monospace;">₱${crypto.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
                     </div>
 
-                    <div style="margin-bottom: 12px;">
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-bottom: 6px;">Amount to Trade</label>
                         <input
                             type="number"
                             id="crypto-amount-${crypto.id}"
-                            placeholder="Amount"
+                            placeholder="0.00000000"
                             min="0"
                             step="0.00000001"
-                            style="width: 100%; padding: 10px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 14px;"
+                            style="width: 100%; padding: 14px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 10px; color: var(--text-primary); font-size: 15px; font-weight: 600; font-family: monospace; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);"
+                            onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.05), 0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                            onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.05)'"
                         />
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <button
                             onclick="game.buyCrypto('${crypto.id}', parseFloat(document.getElementById('crypto-amount-${crypto.id}').value) || 0)"
-                            style="padding: 10px 20px; background: var(--success); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: opacity 0.2s;"
-                            onmouseover="this.style.opacity='0.8'"
-                            onmouseout="this.style.opacity='1'">
+                            style="padding: 14px; background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3); text-transform: uppercase; letter-spacing: 0.5px;"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(34, 197, 94, 0.4)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(34, 197, 94, 0.3)'"
+                            onmousedown="this.style.transform='translateY(0)'"
+                            onmouseup="this.style.transform='translateY(-2px)'">
                             🛒 Buy
                         </button>
                         <button
                             onclick="game.sellCrypto('${crypto.id}', parseFloat(document.getElementById('crypto-amount-${crypto.id}').value) || 0)"
-                            style="padding: 10px 20px; background: var(--danger); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: opacity 0.2s;"
-                            onmouseover="this.style.opacity='0.8'"
-                            onmouseout="this.style.opacity='1'">
+                            style="padding: 14px; background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3); text-transform: uppercase; letter-spacing: 0.5px;"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.4)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(239, 68, 68, 0.3)'"
+                            onmousedown="this.style.transform='translateY(0)'"
+                            onmouseup="this.style.transform='translateY(-2px)'">
                             💸 Sell
                         </button>
                     </div>

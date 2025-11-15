@@ -165,60 +165,66 @@ class UIController {
 
         // Create Time-Based Investment Options Section
         const timeBasedInvestments = `
-            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                <h3 style="margin: 0 0 15px 0; font-size: 16px; color: var(--text-primary);">📈 Create Time-Based Investment</h3>
+            <div style="margin-bottom: 20px;">
+                <h3 style="margin: 0 0 15px 0; font-size: 18px; color: var(--text-primary); font-weight: 600;">📈 Create Time-Based Investment</h3>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
 
                     <!-- Interest Account -->
-                    <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <span style="font-size: 24px;">🏦</span>
+                    <div style="background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; transition: all 0.2s;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                            <span style="font-size: 32px;">🏦</span>
                             <div>
-                                <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">Interest Account</div>
-                                <div style="font-size: 11px; color: var(--text-secondary);">5% annual return • 10 min duration</div>
+                                <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Interest Account</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">5% annual return • 10 min duration</div>
                             </div>
                         </div>
-                        <input type="number" id="interest-investment-amount" placeholder="Min: ₱5,000" min="5000" step="1000"
-                               style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); margin-bottom: 10px; font-size: 13px;">
-                        <button class="btn-primary btn-small" onclick="ui.createTimedInvestment('interest')" style="width: 100%;">
-                            Create Investment
+                        <input type="number" id="interest-investment-amount" placeholder="Amount (Min: ₱5,000)" min="5000" step="1000"
+                               style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); color: var(--text-primary); margin-bottom: 12px; font-size: 14px; font-weight: 500; transition: border-color 0.2s;"
+                               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-color)'">
+                        <button class="btn-primary btn-small" onclick="ui.createTimedInvestment('interest')" style="width: 100%; padding: 12px; font-weight: 600; font-size: 14px;">
+                            💰 Create Investment
                         </button>
                     </div>
 
                     <!-- Stock Investment -->
-                    <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <span style="font-size: 24px;">📊</span>
+                    <div style="background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; transition: all 0.2s;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                            <span style="font-size: 32px;">📊</span>
                             <div>
-                                <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">Stock Investment</div>
-                                <div style="font-size: 11px; color: var(--text-secondary);">3% dividend • 5 min duration</div>
+                                <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Stock Investment</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">3% dividend • 5 min duration</div>
                             </div>
                         </div>
-                        <input type="number" id="stocks-investment-amount" placeholder="Min: ₱5,000" min="5000" step="1000"
-                               style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); margin-bottom: 10px; font-size: 13px;">
-                        <button class="btn-primary btn-small" onclick="ui.createTimedInvestment('stocks')" style="width: 100%;">
-                            Create Investment
+                        <input type="number" id="stocks-investment-amount" placeholder="Amount (Min: ₱5,000)" min="5000" step="1000"
+                               style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); color: var(--text-primary); margin-bottom: 12px; font-size: 14px; font-weight: 500; transition: border-color 0.2s;"
+                               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-color)'">
+                        <button class="btn-primary btn-small" onclick="ui.createTimedInvestment('stocks')" style="width: 100%; padding: 12px; font-weight: 600; font-size: 14px;">
+                            📈 Create Investment
                         </button>
                     </div>
 
                     <!-- Mutual Fund -->
-                    <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <span style="font-size: 24px;">💼</span>
+                    <div style="background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; transition: all 0.2s;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                            <span style="font-size: 32px;">💼</span>
                             <div>
-                                <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">Mutual Fund</div>
-                                <div style="font-size: 11px; color: var(--text-secondary);">4% dividend • 5 min duration</div>
+                                <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Mutual Fund</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">4% dividend • 5 min duration</div>
                             </div>
                         </div>
-                        <input type="number" id="mutual-investment-amount" placeholder="Min: ₱5,000" min="5000" step="1000"
-                               style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); margin-bottom: 10px; font-size: 13px;">
-                        <button class="btn-primary btn-small" onclick="ui.createTimedInvestment('mutual')" style="width: 100%;">
-                            Create Investment
+                        <input type="number" id="mutual-investment-amount" placeholder="Amount (Min: ₱5,000)" min="5000" step="1000"
+                               style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); color: var(--text-primary); margin-bottom: 12px; font-size: 14px; font-weight: 500; transition: border-color 0.2s;"
+                               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-color)'">
+                        <button class="btn-primary btn-small" onclick="ui.createTimedInvestment('mutual')" style="width: 100%; padding: 12px; font-weight: 600; font-size: 14px;">
+                            💎 Create Investment
                         </button>
                     </div>
 
                 </div>
             </div>
+
+            <h3 style="margin: 30px 0 15px 0; font-size: 18px; color: var(--text-primary); font-weight: 600;">🏛️ Traditional Investment Options</h3>
+            <div class="shop-items">
         `;
 
         investmentsGrid.innerHTML = emergencyBanner + timeBasedInvestments + game.investmentOptions.map(investment => {
@@ -252,7 +258,7 @@ class UIController {
                     `}
                 </div>
             `;
-        }).join('');
+        }).join('') + '</div>';
     }
 
     renderBusinessView() {
