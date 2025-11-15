@@ -905,29 +905,41 @@ class PinoyRPG {
                 this.addNotification('🎉 All investments are now unlocked!', '✅');
             }
         } else {
-            // Regular investment
-            const investment = {
-                id: Date.now(),
-                type: investmentId,
-                name: option.name,
-                amount: amount,
-                initialAmount: amount,
-                totalReturns: 0,
-                startTime: Date.now()
-            };
+            // Check if this investment type should create an active investment with progress bar
+            if (investmentId === 'time-deposit' || investmentId === 'pag-ibig-mp2') {
+                // Create interest account active investment (very slow progress - 10 min)
+                this.createActiveInvestment('interest', amount);
+            } else if (investmentId === 'stocks-index') {
+                // Create stocks active investment (slower progress - 5 min)
+                this.createActiveInvestment('stocks', amount);
+            } else if (investmentId === 'mutual-fund') {
+                // Create mutual fund active investment (slower progress - 5 min)
+                this.createActiveInvestment('mutual', amount);
+            } else {
+                // Regular passive investment (real estate, crypto, etc.)
+                const investment = {
+                    id: Date.now(),
+                    type: investmentId,
+                    name: option.name,
+                    amount: amount,
+                    initialAmount: amount,
+                    totalReturns: 0,
+                    startTime: Date.now()
+                };
 
-            this.investments.push(investment);
+                this.investments.push(investment);
 
-            this.addNotification(`Invested ₱${amount.toLocaleString()} in ${option.name}`, option.icon);
-            this.addActivityLog(`New investment: ${option.name}`, option.icon);
+                this.addNotification(`Invested ₱${amount.toLocaleString()} in ${option.name}`, option.icon);
+                this.addActivityLog(`New investment: ${option.name}`, option.icon);
 
-            // Show achievement for first investment
-            if (this.investments.length === 1) {
-                this.showAchievement('First Investment! 📈', '🎉');
+                // Show achievement for first investment
+                if (this.investments.length === 1) {
+                    this.showAchievement('First Investment! 📈', '🎉');
+                }
+
+                // Update goal
+                this.updateGoalProgress('first-investment', 1);
             }
-
-            // Update goal
-            this.updateGoalProgress('first-investment', 1);
         }
 
         this.calculateNetWorth();

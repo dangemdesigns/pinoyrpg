@@ -57,7 +57,6 @@ class UIController {
                 break;
             case 'investments':
                 this.renderInvestmentsView();
-                this.renderActiveInvestments();
                 break;
             case 'crypto':
                 this.renderCryptoView();
@@ -70,6 +69,7 @@ class UIController {
                 break;
             case 'assets':
                 game.updateInventoryUI();
+                this.renderActiveInvestments();
                 game.updateActivityLogView();
                 break;
             case 'goals':
@@ -163,71 +163,7 @@ class UIController {
             </div>
         `;
 
-        // Create Time-Based Investment Options Section
-        const timeBasedInvestments = `
-            <div style="margin-bottom: 20px;">
-                <h3 style="margin: 0 0 15px 0; font-size: 18px; color: var(--text-primary); font-weight: 600;">📈 Create Time-Based Investment</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-
-                    <!-- Interest Account -->
-                    <div style="background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; transition: all 0.2s;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-                            <span style="font-size: 32px;">🏦</span>
-                            <div>
-                                <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Interest Account</div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">5% annual return • 10 min duration</div>
-                            </div>
-                        </div>
-                        <input type="number" id="interest-investment-amount" placeholder="Amount (Min: ₱5,000)" min="5000" step="1000"
-                               style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); color: var(--text-primary); margin-bottom: 12px; font-size: 14px; font-weight: 500; transition: border-color 0.2s;"
-                               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-color)'">
-                        <button class="btn-primary btn-small" onclick="ui.createTimedInvestment('interest')" style="width: 100%; padding: 12px; font-weight: 600; font-size: 14px;">
-                            💰 Create Investment
-                        </button>
-                    </div>
-
-                    <!-- Stock Investment -->
-                    <div style="background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; transition: all 0.2s;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-                            <span style="font-size: 32px;">📊</span>
-                            <div>
-                                <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Stock Investment</div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">3% dividend • 5 min duration</div>
-                            </div>
-                        </div>
-                        <input type="number" id="stocks-investment-amount" placeholder="Amount (Min: ₱5,000)" min="5000" step="1000"
-                               style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); color: var(--text-primary); margin-bottom: 12px; font-size: 14px; font-weight: 500; transition: border-color 0.2s;"
-                               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-color)'">
-                        <button class="btn-primary btn-small" onclick="ui.createTimedInvestment('stocks')" style="width: 100%; padding: 12px; font-weight: 600; font-size: 14px;">
-                            📈 Create Investment
-                        </button>
-                    </div>
-
-                    <!-- Mutual Fund -->
-                    <div style="background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; transition: all 0.2s;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-                            <span style="font-size: 32px;">💼</span>
-                            <div>
-                                <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Mutual Fund</div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">4% dividend • 5 min duration</div>
-                            </div>
-                        </div>
-                        <input type="number" id="mutual-investment-amount" placeholder="Amount (Min: ₱5,000)" min="5000" step="1000"
-                               style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); color: var(--text-primary); margin-bottom: 12px; font-size: 14px; font-weight: 500; transition: border-color 0.2s;"
-                               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-color)'">
-                        <button class="btn-primary btn-small" onclick="ui.createTimedInvestment('mutual')" style="width: 100%; padding: 12px; font-weight: 600; font-size: 14px;">
-                            💎 Create Investment
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-
-            <h3 style="margin: 30px 0 15px 0; font-size: 18px; color: var(--text-primary); font-weight: 600;">🏛️ Traditional Investment Options</h3>
-            <div class="shop-items">
-        `;
-
-        investmentsGrid.innerHTML = emergencyBanner + timeBasedInvestments + game.investmentOptions.map(investment => {
+        investmentsGrid.innerHTML = emergencyBanner + game.investmentOptions.map(investment => {
             const canAfford = game.player.financials.cash >= investment.minInvestment;
             const isSavingsAccount = investment.id === 'savings-account';
             const isLocked = !isSavingsAccount && !game.hasEmergencyFund;
@@ -258,7 +194,7 @@ class UIController {
                     `}
                 </div>
             `;
-        }).join('') + '</div>';
+        }).join('');
     }
 
     renderBusinessView() {
@@ -437,12 +373,18 @@ class UIController {
         if (!listEl) return;
 
         if (!game.activeInvestments || game.activeInvestments.length === 0) {
-            listEl.innerHTML = '<div style="text-align: center; color: var(--text-tertiary); padding: 40px;">No active investments yet. Create one above to start earning!</div>';
+            listEl.innerHTML = '<div style="text-align: center; color: var(--text-tertiary); padding: 40px;">No active investments yet. Invest in Time Deposit, Stocks, or Mutual Funds to see progress here!</div>';
             return;
         }
 
         const now = Date.now();
-        listEl.innerHTML = game.activeInvestments.map(investment => {
+        listEl.innerHTML = game.activeInvestments.filter(investment => {
+            // Filter out matured interest accounts (they auto-withdraw)
+            const elapsed = now - investment.startTime;
+            const progress = Math.min(100, (elapsed / investment.duration) * 100);
+            const matured = progress >= 100;
+            return !(matured && investment.type === 'interest');
+        }).map(investment => {
             const elapsed = now - investment.startTime;
             const progress = Math.min(100, (elapsed / investment.duration) * 100);
             const matured = progress >= 100;
@@ -452,6 +394,15 @@ class UIController {
             if (matured && !investment.matured) {
                 investment.matured = true;
                 game.addNotification(`Your ${investment.name} has matured! Total: ₱${total.toLocaleString()}`, '📈');
+
+                // Auto-withdraw interest accounts when they mature
+                if (investment.type === 'interest') {
+                    game.player.financials.cash += total;
+                    game.activeInvestments = game.activeInvestments.filter(inv => inv.id !== investment.id);
+                    game.addNotification(`Auto-withdrawn ₱${total.toLocaleString()} from ${investment.name}!`, '💰');
+                    game.addActivityLog(`${investment.name} matured: +₱${total.toLocaleString()}`, '💰');
+                    game.saveGame();
+                }
             }
 
             const typeIcons = {
@@ -483,22 +434,30 @@ class UIController {
                         </div>
                     </div>
 
-                    <div style="background: var(--bg-secondary); border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: ${matured ? '15px' : '0'};">
+                    <div style="background: var(--bg-secondary); border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: ${matured && (investment.type === 'stocks' || investment.type === 'mutual') ? '15px' : '0'};">
                         <div style="height: 100%; background: ${matured ? 'var(--success)' : 'var(--primary)'}; width: ${progress}%; transition: width 0.3s;"></div>
                     </div>
 
-                    ${matured ? `
+                    ${matured && (investment.type === 'stocks' || investment.type === 'mutual') ? `
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
                             <button
                                 onclick="game.withdrawInvestment('${investment.id}')"
-                                style="padding: 10px 20px; background: var(--success); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                style="padding: 10px 20px; background: var(--success); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: opacity 0.2s;"
+                                onmouseover="this.style.opacity='0.9'"
+                                onmouseout="this.style.opacity='1'">
                                 💰 Withdraw
                             </button>
                             <button
                                 onclick="game.reinvestInvestment('${investment.id}')"
-                                style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: opacity 0.2s;"
+                                onmouseover="this.style.opacity='0.9'"
+                                onmouseout="this.style.opacity='1'">
                                 🔄 Reinvest
                             </button>
+                        </div>
+                    ` : matured && investment.type === 'interest' ? `
+                        <div style="margin-top: 15px; text-align: center; padding: 10px; background: rgba(34, 197, 94, 0.1); border-radius: 6px;">
+                            <div style="font-size: 12px; color: var(--success); font-weight: 600;">✅ Interest account matured! Earnings automatically added to your cash.</div>
                         </div>
                     ` : ''}
                 </div>
