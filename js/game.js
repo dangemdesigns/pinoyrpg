@@ -205,7 +205,19 @@ class PinoyRPG {
 
     checkEmergencyFundStatus() {
         const wasReady = this.hasEmergencyFund;
-        this.hasEmergencyFund = this.player.financials.emergencyFund >= this.emergencyFundRequired;
+
+        // Calculate total emergency fund (includes active savings investments)
+        let totalEmergencyFund = this.player.financials.emergencyFund || 0;
+
+        // Add active interest investments (savings account, time deposits, pag-ibig)
+        if (this.activeInvestments && this.activeInvestments.length > 0) {
+            totalEmergencyFund += this.activeInvestments
+                .filter(inv => inv.type === 'interest')
+                .reduce((sum, inv) => sum + inv.principal, 0);
+        }
+
+        this.hasEmergencyFund = totalEmergencyFund >= this.emergencyFundRequired;
+        this.player.financials.emergencyFund = totalEmergencyFund;
 
         // Notify if status changed
         if (wasReady && !this.hasEmergencyFund) {
@@ -891,55 +903,51 @@ class PinoyRPG {
             return;
         }
 
-        this.player.financials.cash -= amount;
+        // Check if this investment type should create an active investment with progress bar
+        if (investmentId === 'savings-account' || investmentId === 'time-deposit' || investmentId === 'pag-ibig-mp2') {
+            // Create interest account active investment (very slow progress - 10 min)
+            this.createActiveInvestment('interest', amount, option.name);
 
-        // If Savings Account, add to emergency fund
-        if (investmentId === 'savings-account') {
-            this.player.financials.emergencyFund += amount;
-            this.checkEmergencyFundStatus();
-            this.addNotification(`Added ₱${amount.toLocaleString()} to Emergency Fund`, option.icon);
-            this.addActivityLog(`Emergency Fund: +₱${amount.toLocaleString()}`, option.icon);
-
-            if (this.hasEmergencyFund && this.player.financials.emergencyFund === this.emergencyFundRequired) {
-                this.showAchievement('Emergency Fund Complete! 🎉', '💰');
-                this.addNotification('🎉 All investments are now unlocked!', '✅');
-            }
-        } else {
-            // Check if this investment type should create an active investment with progress bar
-            if (investmentId === 'time-deposit' || investmentId === 'pag-ibig-mp2') {
-                // Create interest account active investment (very slow progress - 10 min)
-                this.createActiveInvestment('interest', amount);
-            } else if (investmentId === 'stocks-index') {
-                // Create stocks active investment (slower progress - 5 min)
-                this.createActiveInvestment('stocks', amount);
-            } else if (investmentId === 'mutual-fund') {
-                // Create mutual fund active investment (slower progress - 5 min)
-                this.createActiveInvestment('mutual', amount);
-            } else {
-                // Regular passive investment (real estate, crypto, etc.)
-                const investment = {
-                    id: Date.now(),
-                    type: investmentId,
-                    name: option.name,
-                    amount: amount,
-                    initialAmount: amount,
-                    totalReturns: 0,
-                    startTime: Date.now()
-                };
-
-                this.investments.push(investment);
-
-                this.addNotification(`Invested ₱${amount.toLocaleString()} in ${option.name}`, option.icon);
-                this.addActivityLog(`New investment: ${option.name}`, option.icon);
-
-                // Show achievement for first investment
-                if (this.investments.length === 1) {
-                    this.showAchievement('First Investment! 📈', '🎉');
+            // For savings account, also track emergency fund
+            if (investmentId === 'savings-account') {
+                this.checkEmergencyFundStatus();
+                if (this.hasEmergencyFund) {
+                    this.showAchievement('Emergency Fund Complete! 🎉', '💰');
+                    this.addNotification('🎉 All investments are now unlocked!', '✅');
                 }
-
-                // Update goal
-                this.updateGoalProgress('first-investment', 1);
             }
+        } else if (investmentId === 'stocks-index') {
+            // Create stocks active investment (slower progress - 5 min)
+            this.createActiveInvestment('stocks', amount, option.name);
+        } else if (investmentId === 'mutual-fund') {
+            // Create mutual fund active investment (slower progress - 5 min)
+            this.createActiveInvestment('mutual', amount, option.name);
+        } else {
+            // Regular passive investment (real estate, crypto, etc.)
+            this.player.financials.cash -= amount;
+
+            const investment = {
+                id: Date.now(),
+                type: investmentId,
+                name: option.name,
+                amount: amount,
+                initialAmount: amount,
+                totalReturns: 0,
+                startTime: Date.now()
+            };
+
+            this.investments.push(investment);
+
+            this.addNotification(`Invested ₱${amount.toLocaleString()} in ${option.name}`, option.icon);
+            this.addActivityLog(`New investment: ${option.name}`, option.icon);
+
+            // Show achievement for first investment
+            if (this.investments.length === 1) {
+                this.showAchievement('First Investment! 📈', '🎉');
+            }
+
+            // Update goal
+            this.updateGoalProgress('first-investment', 1);
         }
 
         this.calculateNetWorth();
@@ -1805,7 +1813,7 @@ class PinoyRPG {
     // INVESTMENT MANAGEMENT SYSTEM
     // ===================================
 
-    createActiveInvestment(type, amount) {
+    createActiveInvestment(type, amount, investmentName = null) {
         if (amount < 5000) {
             this.addNotification('Minimum investment is ₱5,000!', '❌');
             return false;
@@ -1820,15 +1828,15 @@ class PinoyRPG {
         if (type === 'interest') {
             duration = 10 * 60 * 1000; // 10 minutes (represents 1 year)
             interestRate = 0.05;
-            name = 'Interest Account';
+            name = investmentName || 'Interest Account';
         } else if (type === 'stocks') {
             duration = 5 * 60 * 1000; // 5 minutes (represents 6 months)
             interestRate = 0.03;
-            name = 'Stock Investment';
+            name = investmentName || 'Stock Investment';
         } else if (type === 'mutual') {
             duration = 5 * 60 * 1000; // 5 minutes (represents 6 months)
             interestRate = 0.04;
-            name = 'Mutual Fund';
+            name = investmentName || 'Mutual Fund';
         }
 
         if (!this.activeInvestments) {
