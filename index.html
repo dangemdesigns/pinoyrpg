@@ -71,6 +71,9 @@
                     <button class="tab-btn" data-tab="marketplace">
                         <i class="fas fa-chart-line"></i> Market Place
                     </button>
+                    <button class="tab-btn" data-tab="crypto">
+                        <i class="fas fa-coins"></i> Crypto
+                    </button>
                     <button class="tab-btn" data-tab="inventory">
                         <i class="fas fa-boxes"></i> Inventory
                     </button>
@@ -500,12 +503,35 @@
                         </div>
                     </div>
                 </div>
-                    
+
+                    <!-- Crypto Tab -->
+                    <div class="tab-pane" id="crypto-tab">
+                        <h2><i class="fas fa-coins"></i> Cryptocurrency Trading</h2>
+                        <p>Trade cryptocurrencies and watch your investments grow! (Counts toward 5k emergency fund minimum)</p>
+
+                        <div class="crypto-timer-section">
+                            <div class="crypto-timer-card">
+                                <i class="fas fa-clock"></i>
+                                <h4>Next Price Update</h4>
+                                <p id="crypto-timer-display">--:--:--</p>
+                            </div>
+                            <div class="crypto-balance-card">
+                                <i class="fas fa-wallet"></i>
+                                <h4>Your Crypto Value</h4>
+                                <p id="total-crypto-value">₱0</p>
+                            </div>
+                        </div>
+
+                        <div id="crypto-trading-grid">
+                            <!-- Crypto cards will be populated by JavaScript -->
+                        </div>
+                    </div>
+
                     <!-- Inventory Tab -->
                     <div class="tab-pane" id="inventory-tab">
                         <h2><i class="fas fa-boxes"></i> Inventory & Savings</h2>
                         <p>Track your resources and savings for business expansion.</p>
-                        
+
                         <div id="inventory-content">
                             <div class="inventory-section">
                                 <h3><i class="fas fa-money-bill-wave"></i> Current Money</h3>
@@ -519,7 +545,17 @@
                                     </button>
                                 </div>
                             </div>
-                            
+
+                            <div class="inventory-section">
+                                <h3><i class="fas fa-chart-line"></i> Investment Assets</h3>
+                                <div id="investment-assets-list">
+                                    <!-- Investment assets with progress bars will be populated by JavaScript -->
+                                </div>
+                                <button id="create-investment-btn" class="btn-secondary">
+                                    <i class="fas fa-plus-circle"></i> Create New Investment (Min. ₱5,000)
+                                </button>
+                            </div>
+
                             <div class="inventory-section">
                                 <h3><i class="fas fa-box-open"></i> Item Inventory</h3>
                                 <div id="item-list">
@@ -529,7 +565,14 @@
                                     <div class="item"><i class="fas fa-medal"></i> Bayanihan Points: <span id="bayanihan-points">0</span></div>
                                 </div>
                             </div>
-                            
+
+                            <div class="inventory-section">
+                                <h3><i class="fas fa-bell"></i> Activity Log</h3>
+                                <div id="activity-log-list" class="activity-log-container">
+                                    <!-- Activity log will be populated by JavaScript -->
+                                </div>
+                            </div>
+
                             <div class="inventory-section">
                                 <h3><i class="fas fa-handshake"></i> PALUGAN (Cooperative)</h3>
                                 <div class="item"><i class="fas fa-users"></i> Members: <span id="palugan-members">0</span></div>
