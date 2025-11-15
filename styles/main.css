@@ -1155,8 +1155,26 @@ body {
 }
 
 @media (max-width: 1200px) {
+    .app-container {
+        flex-wrap: wrap;
+    }
+
     .right-sidebar {
-        display: none;
+        order: 3;
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        max-height: 400px;
+    }
+
+    .main-content {
+        order: 2;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .left-sidebar {
+        order: 1;
     }
 
     .content-grid {
@@ -1176,6 +1194,13 @@ body {
 
     .main-content {
         padding: var(--spacing-md);
+        width: calc(100% - 60px);
+    }
+
+    .right-sidebar {
+        width: 100%;
+        padding: var(--spacing-md);
+        max-height: 300px;
     }
 
     .page-title {
