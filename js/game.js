@@ -52,6 +52,7 @@ class PinoyRPG {
 
     init() {
         this.loadGame();
+        this.initCryptoMarket();
         this.updateUI();
         this.initializeGoals();
         this.updateGuidance();
@@ -1410,7 +1411,10 @@ class PinoyRPG {
             businesses: this.businesses,
             goals: this.goals,
             barangay: this.barangay,
-            gameStats: this.gameStats
+            gameStats: this.gameStats,
+            cryptoMarket: this.cryptoMarket,
+            activeInvestments: this.activeInvestments,
+            activityLog: this.activityLog
         };
 
         localStorage.setItem('pinoyrpg_save', JSON.stringify(saveData));
@@ -1459,6 +1463,9 @@ class PinoyRPG {
                 this.goals = data.goals || this.goals;
                 this.barangay = data.barangay || this.barangay;
                 this.gameStats = data.gameStats || this.gameStats;
+                this.cryptoMarket = data.cryptoMarket || this.cryptoMarket;
+                this.activeInvestments = data.activeInvestments || [];
+                this.activityLog = data.activityLog || [];
 
                 console.log('✅ Save data loaded successfully!');
             } catch (e) {
@@ -1541,6 +1548,395 @@ class PinoyRPG {
             setTimeout(() => {
                 popup.classList.remove('show');
             }, 4000);
+        }
+    }
+
+    // ===================================
+    // CRYPTO TRADING SYSTEM
+    // ===================================
+
+    initCryptoMarket() {
+        if (!this.cryptoMarket) {
+            this.cryptoMarket = {
+                lastPriceUpdate: Date.now(),
+                nextPriceUpdate: Date.now() + (5 * 60 * 1000), // 5 minutes (represents 24 hours)
+                cryptoData: [
+                    { id: 'btc', name: 'Bitcoin', symbol: 'BTC', price: 3000000, priceChange: 0, balance: 0 },
+                    { id: 'eth', name: 'Ethereum', symbol: 'ETH', price: 150000, priceChange: 0, balance: 0 },
+                    { id: 'bnb', name: 'Binance Coin', symbol: 'BNB', price: 15000, priceChange: 0, balance: 0 },
+                    { id: 'xrp', name: 'Ripple', symbol: 'XRP', price: 30, priceChange: 0, balance: 0 },
+                    { id: 'ada', name: 'Cardano', symbol: 'ADA', price: 20, priceChange: 0, balance: 0 },
+                    { id: 'sol', name: 'Solana', symbol: 'SOL', price: 8000, priceChange: 0, balance: 0 },
+                    { id: 'doge', name: 'Dogecoin', symbol: 'DOGE', price: 5, priceChange: 0, balance: 0 },
+                    { id: 'dot', name: 'Polkadot', symbol: 'DOT', price: 400, priceChange: 0, balance: 0 },
+                    { id: 'ltc', name: 'Litecoin', symbol: 'LTC', price: 5000, priceChange: 0, balance: 0 },
+                    { id: 'trx', name: 'TRON', symbol: 'TRX', price: 8, priceChange: 0, balance: 0 }
+                ]
+            };
+        }
+
+        // Check if prices need updating
+        const now = Date.now();
+        if (now >= this.cryptoMarket.nextPriceUpdate) {
+            this.updateCryptoPrices();
+        }
+
+        // Start timer update interval
+        setInterval(() => this.updateCryptoTimer(), 1000);
+    }
+
+    updateCryptoPrices() {
+        const now = Date.now();
+
+        this.cryptoMarket.cryptoData.forEach(crypto => {
+            // Main probability: 60% no change, 20% increase, 20% decrease
+            const mainRoll = Math.random();
+            let priceChange = 0;
+
+            if (mainRoll < 0.6) {
+                priceChange = 0;
+            } else if (mainRoll < 0.8) {
+                // 20% increase path
+                const increaseRoll = Math.random();
+                if (increaseRoll < 0.5) {
+                    priceChange = 0;
+                } else if (increaseRoll < 0.8) {
+                    priceChange = Math.random() * 0.10;
+                } else if (increaseRoll < 0.95) {
+                    priceChange = Math.random() * 0.20;
+                } else {
+                    priceChange = Math.random() * 0.30;
+                }
+            } else {
+                // 20% decrease path
+                const decreaseRoll = Math.random();
+                if (decreaseRoll < 0.5) {
+                    priceChange = 0;
+                } else if (decreaseRoll < 0.8) {
+                    priceChange = -(Math.random() * 0.10);
+                } else if (decreaseRoll < 0.95) {
+                    priceChange = -(Math.random() * 0.20);
+                } else {
+                    priceChange = -(Math.random() * 0.30);
+                }
+            }
+
+            const oldPrice = crypto.price;
+            crypto.price = Math.max(0.01, crypto.price * (1 + priceChange));
+            crypto.priceChange = ((crypto.price - oldPrice) / oldPrice) * 100;
+        });
+
+        this.cryptoMarket.lastPriceUpdate = now;
+        this.cryptoMarket.nextPriceUpdate = now + (5 * 60 * 1000);
+
+        this.addNotification('Crypto prices have been updated!', '₿');
+        this.addActivityLog('Cryptocurrency prices updated', '₿');
+        this.updateCryptoUI();
+        this.saveGame();
+    }
+
+    updateCryptoTimer() {
+        const timerDisplay = document.getElementById('crypto-timer-display');
+        if (!timerDisplay || !this.cryptoMarket) return;
+
+        const now = Date.now();
+        const timeRemaining = this.cryptoMarket.nextPriceUpdate - now;
+
+        if (timeRemaining <= 0) {
+            timerDisplay.textContent = '00:00:00';
+            this.updateCryptoPrices();
+        } else {
+            const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+            const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+            timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+
+    buyCrypto(cryptoId, amount) {
+        const crypto = this.cryptoMarket.cryptoData.find(c => c.id === cryptoId);
+        if (!crypto || amount <= 0) return;
+
+        const cost = amount * crypto.price;
+
+        if (this.player.financials.cash < cost) {
+            this.addNotification('Insufficient funds!', '❌');
+            return;
+        }
+
+        this.player.financials.cash -= cost;
+        crypto.balance += amount;
+
+        this.addNotification(`Bought ${amount.toFixed(8)} ${crypto.symbol} for ₱${cost.toLocaleString()}!`, '₿');
+        this.addActivityLog(`Purchased ${amount.toFixed(8)} ${crypto.symbol}`, '₿');
+        this.updateCryptoUI();
+        this.updateUI();
+        this.saveGame();
+    }
+
+    sellCrypto(cryptoId, amount) {
+        const crypto = this.cryptoMarket.cryptoData.find(c => c.id === cryptoId);
+        if (!crypto || amount <= 0) return;
+
+        if (crypto.balance < amount) {
+            this.addNotification('Insufficient crypto balance!', '❌');
+            return;
+        }
+
+        const value = amount * crypto.price;
+        this.player.financials.cash += value;
+        crypto.balance -= amount;
+
+        this.addNotification(`Sold ${amount.toFixed(8)} ${crypto.symbol} for ₱${value.toLocaleString()}!`, '💰');
+        this.addActivityLog(`Sold ${amount.toFixed(8)} ${crypto.symbol}`, '💰');
+        this.updateCryptoUI();
+        this.updateUI();
+        this.saveGame();
+    }
+
+    getTotalCryptoValue() {
+        if (!this.cryptoMarket) return 0;
+        return this.cryptoMarket.cryptoData.reduce((total, crypto) => {
+            return total + (crypto.balance * crypto.price);
+        }, 0);
+    }
+
+    updateCryptoUI() {
+        const cryptoGrid = document.getElementById('crypto-trading-grid');
+        const totalValueEl = document.getElementById('total-crypto-value');
+        const playerGoldEl = document.getElementById('player-gold-crypto');
+
+        if (!cryptoGrid || !this.cryptoMarket) return;
+
+        // Update total value
+        const totalValue = this.getTotalCryptoValue();
+        if (totalValueEl) {
+            totalValueEl.textContent = `₱${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+        }
+
+        // Update player cash display
+        if (playerGoldEl) {
+            playerGoldEl.textContent = Math.floor(this.player.financials.cash).toLocaleString();
+        }
+
+        // Render crypto cards
+        cryptoGrid.innerHTML = this.cryptoMarket.cryptoData.map(crypto => {
+            const priceChangeClass = crypto.priceChange > 0 ? 'positive' : crypto.priceChange < 0 ? 'negative' : 'neutral';
+            const priceChangeIcon = crypto.priceChange > 0 ? '📈' : crypto.priceChange < 0 ? '📉' : '➖';
+
+            return `
+                <div style="padding: 20px; border: 2px solid var(--border); border-radius: 12px; background: var(--card-bg); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+                        <div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--primary);">${crypto.symbol}</div>
+                            <div style="font-size: 14px; color: var(--text-secondary);">${crypto.name}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 14px; color: var(--text-tertiary); margin-bottom: 4px;">${priceChangeIcon}</div>
+                            <div style="font-size: 16px; font-weight: 600; color: ${priceChangeClass === 'positive' ? 'var(--success)' : priceChangeClass === 'negative' ? 'var(--danger)' : 'var(--text-tertiary)'};">
+                                ${crypto.priceChange >= 0 ? '+' : ''}${crypto.priceChange.toFixed(2)}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 4px;">💎 Your Balance</div>
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${crypto.balance.toFixed(8)} ${crypto.symbol}</div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 4px;">💰 Current Price</div>
+                        <div style="font-size: 18px; font-weight: 700; color: var(--text-primary);">₱${crypto.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <input
+                            type="number"
+                            id="crypto-amount-${crypto.id}"
+                            placeholder="Amount"
+                            min="0"
+                            step="0.00000001"
+                            style="width: 100%; padding: 10px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 14px;"
+                        />
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button
+                            onclick="game.buyCrypto('${crypto.id}', parseFloat(document.getElementById('crypto-amount-${crypto.id}').value) || 0)"
+                            style="padding: 10px 20px; background: var(--success); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: opacity 0.2s;"
+                            onmouseover="this.style.opacity='0.8'"
+                            onmouseout="this.style.opacity='1'">
+                            🛒 Buy
+                        </button>
+                        <button
+                            onclick="game.sellCrypto('${crypto.id}', parseFloat(document.getElementById('crypto-amount-${crypto.id}').value) || 0)"
+                            style="padding: 10px 20px; background: var(--danger); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: opacity 0.2s;"
+                            onmouseover="this.style.opacity='0.8'"
+                            onmouseout="this.style.opacity='1'">
+                            💸 Sell
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ===================================
+    // INVESTMENT MANAGEMENT SYSTEM
+    // ===================================
+
+    createActiveInvestment(type, amount) {
+        if (amount < 5000) {
+            this.addNotification('Minimum investment is ₱5,000!', '❌');
+            return false;
+        }
+
+        if (this.player.financials.cash < amount) {
+            this.addNotification('Insufficient funds!', '❌');
+            return false;
+        }
+
+        let duration, interestRate, name;
+        if (type === 'interest') {
+            duration = 10 * 60 * 1000; // 10 minutes (represents 1 year)
+            interestRate = 0.05;
+            name = 'Interest Account';
+        } else if (type === 'stocks') {
+            duration = 5 * 60 * 1000; // 5 minutes (represents 6 months)
+            interestRate = 0.03;
+            name = 'Stock Investment';
+        } else if (type === 'mutual') {
+            duration = 5 * 60 * 1000; // 5 minutes (represents 6 months)
+            interestRate = 0.04;
+            name = 'Mutual Fund';
+        }
+
+        if (!this.activeInvestments) {
+            this.activeInvestments = [];
+        }
+
+        const investment = {
+            id: 'inv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            name: name,
+            type: type,
+            principal: amount,
+            interestRate: interestRate,
+            startTime: Date.now(),
+            duration: duration,
+            matured: false
+        };
+
+        this.player.financials.cash -= amount;
+        this.activeInvestments.push(investment);
+
+        this.addNotification(`Created ${name} with ₱${amount.toLocaleString()}!`, '📈');
+        this.addActivityLog(`Invested ₱${amount.toLocaleString()} in ${name}`, '📈');
+        this.updateUI();
+        this.saveGame();
+        return true;
+    }
+
+    withdrawInvestment(investmentId) {
+        const investment = this.activeInvestments.find(inv => inv.id === investmentId);
+        if (!investment || !investment.matured) {
+            this.addNotification('Investment not ready for withdrawal!', '❌');
+            return;
+        }
+
+        const total = investment.principal + (investment.principal * investment.interestRate);
+        this.player.financials.cash += total;
+
+        this.activeInvestments = this.activeInvestments.filter(inv => inv.id !== investmentId);
+
+        this.addNotification(`Withdrew ₱${total.toLocaleString()} from ${investment.name}!`, '💰');
+        this.addActivityLog(`Withdrew ₱${total.toLocaleString()} from ${investment.name}`, '💰');
+        this.updateUI();
+        this.saveGame();
+    }
+
+    reinvestInvestment(investmentId) {
+        const investment = this.activeInvestments.find(inv => inv.id === investmentId);
+        if (!investment || !investment.matured) {
+            this.addNotification('Investment not ready for reinvestment!', '❌');
+            return;
+        }
+
+        const total = investment.principal + (investment.principal * investment.interestRate);
+        this.activeInvestments = this.activeInvestments.filter(inv => inv.id !== investmentId);
+
+        this.player.financials.cash += total;
+        this.createActiveInvestment(investment.type, total);
+
+        this.addNotification(`Reinvested ₱${total.toLocaleString()} in ${investment.name}!`, '🔄');
+    }
+
+    // ===================================
+    // ACTIVITY LOG SYSTEM (Enhanced)
+    // ===================================
+
+    updateActivityLogView() {
+        const logList = document.getElementById('activity-log-list');
+        if (!logList) return;
+
+        if (!this.activityLog || this.activityLog.length === 0) {
+            logList.innerHTML = '<div style="text-align: center; color: var(--text-tertiary); padding: 20px;">No activities yet. Start your journey!</div>';
+            return;
+        }
+
+        logList.innerHTML = this.activityLog.slice(0, 50).map(log => {
+            const date = new Date(log.timestamp);
+            const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            return `
+                <div style="display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); align-items: start;">
+                    <div style="font-size: 24px; flex-shrink: 0;">${log.icon}</div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 14px; color: var(--text-primary);">${log.message}</div>
+                        <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">${dateStr} at ${timeStr}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    addActivityLog(message, icon = '📝') {
+        if (!this.activityLog) {
+            this.activityLog = [];
+        }
+
+        this.activityLog.unshift({
+            message: message,
+            icon: icon,
+            timestamp: Date.now()
+        });
+
+        // Keep only last 100 entries
+        if (this.activityLog.length > 100) {
+            this.activityLog = this.activityLog.slice(0, 100);
+        }
+
+        // Update the view if we're on the assets page
+        this.updateActivityLogView();
+
+        // Also update the feed
+        const feed = document.getElementById('activity-feed');
+        if (!feed) return;
+
+        const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+        const item = document.createElement('div');
+        item.className = 'feed-item';
+        item.innerHTML = `
+            <span class="feed-icon">${icon}</span>
+            <span class="feed-message">${message}</span>
+            <span class="feed-time">${time}</span>
+        `;
+
+        feed.insertBefore(item, feed.firstChild);
+
+        while (feed.children.length > 10) {
+            feed.removeChild(feed.lastChild);
         }
     }
 }
