@@ -73,7 +73,9 @@
                 <div class="content-header">
                     <h1 class="page-title">Financial Dashboard</h1>
                     <div class="header-actions">
-                        <button class="btn-secondary btn-small" onclick="game.advanceMonth()">Skip Month ⏭️</button>
+                        <button class="btn-primary" onclick="game.doWork()" style="font-size: 18px; padding: 15px 40px;">
+                            💼 WORK
+                        </button>
                     </div>
                 </div>
 
@@ -82,7 +84,7 @@
                     <div class="card card-full">
                         <div class="card-header">
                             <h2 class="card-title">Your Journey</h2>
-                            <span class="level-badge">Age <span id="player-level">22</span></span>
+                            <span class="level-badge">Level <span id="player-level">1</span></span>
                         </div>
                         <div class="card-body">
                             <div class="character-overview">
@@ -92,25 +94,25 @@
                                 </div>
                                 <div class="stats-grid">
                                     <div class="stat-item">
-                                        <div class="stat-label">CASH</div>
+                                        <div class="stat-label">💰 CASH</div>
                                         <div class="stat-bar">
-                                            <div class="stat-bar-fill hp-bar" id="hp-bar" style="width: 33%"></div>
+                                            <div class="stat-bar-fill hp-bar" id="hp-bar" style="width: 0%"></div>
                                         </div>
-                                        <div class="stat-value"><span id="current-hp">₱5,000</span> / <span id="max-hp">Cash</span></div>
+                                        <div class="stat-value">₱<span id="current-hp">0</span></div>
                                     </div>
                                     <div class="stat-item">
-                                        <div class="stat-label">SAVINGS</div>
+                                        <div class="stat-label">⚡ ENERGY</div>
                                         <div class="stat-bar">
-                                            <div class="stat-bar-fill mp-bar" id="mp-bar" style="width: 0%"></div>
+                                            <div class="stat-bar-fill mp-bar" id="mp-bar" style="width: 100%"></div>
                                         </div>
-                                        <div class="stat-value"><span id="current-mp">₱0</span> / <span id="max-mp">Savings</span></div>
+                                        <div class="stat-value"><span id="current-mp">100</span> / <span id="max-mp">100</span></div>
                                     </div>
                                     <div class="stat-item">
-                                        <div class="stat-label">NET WORTH</div>
+                                        <div class="stat-label">⭐ XP</div>
                                         <div class="stat-bar">
-                                            <div class="stat-bar-fill xp-bar" id="xp-bar" style="width: 0.5%"></div>
+                                            <div class="stat-bar-fill xp-bar" id="xp-bar" style="width: 0%"></div>
                                         </div>
-                                        <div class="stat-value"><span id="current-xp">₱5,000</span> / <span id="next-xp">Net Worth</span></div>
+                                        <div class="stat-value"><span id="current-xp">0</span> / <span id="next-xp">100</span></div>
                                     </div>
                                 </div>
                                 <div class="attributes-grid">
@@ -165,27 +167,27 @@
                         </div>
                     </div>
 
-                    <!-- Monthly Cashflow -->
+                    <!-- Game Progress -->
                     <div class="card">
                         <div class="card-header">
-                            <h2 class="card-title">Monthly Cash Flow</h2>
+                            <h2 class="card-title">Your Progress</h2>
                         </div>
                         <div class="card-body">
                             <div class="barangay-stats">
                                 <div class="barangay-stat">
-                                    <span class="stat-icon">💵</span>
-                                    <span class="stat-label">Income</span>
-                                    <span class="stat-value" id="monthly-income">₱15,000</span>
+                                    <span class="stat-icon">💼</span>
+                                    <span class="stat-label">Times Worked</span>
+                                    <span class="stat-value" id="total-work-done">0</span>
                                 </div>
                                 <div class="barangay-stat">
-                                    <span class="stat-icon">💸</span>
-                                    <span class="stat-label">Expenses</span>
-                                    <span class="stat-value" id="monthly-expenses">₱12,000</span>
+                                    <span class="stat-icon">📊</span>
+                                    <span class="stat-label">Level</span>
+                                    <span class="stat-value" id="player-level-stat">1</span>
                                 </div>
                                 <div class="barangay-stat">
                                     <span class="stat-icon">💰</span>
-                                    <span class="stat-label">Net Cashflow</span>
-                                    <span class="stat-value" id="net-cashflow" style="color: #2ED573">₱3,000</span>
+                                    <span class="stat-label">Net Worth</span>
+                                    <span class="stat-value" id="net-worth-stat" style="color: #2ED573">₱0</span>
                                 </div>
                             </div>
                         </div>
@@ -350,25 +352,6 @@
                 </div>
             </div>
 
-            <!-- Monthly Progress Widget -->
-            <div class="widget">
-                <div class="widget-header">
-                    <h3 class="widget-title">This Month</h3>
-                </div>
-                <div class="widget-body">
-                    <div class="quick-stats">
-                        <div class="quick-stat">
-                            <span class="quick-stat-label">Month</span>
-                            <span class="quick-stat-value" id="current-month">1</span>
-                        </div>
-                        <div class="quick-stat">
-                            <span class="quick-stat-label">Time to next month</span>
-                            <span class="quick-stat-value" id="time-to-month">30s</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Quick Stats Widget -->
             <div class="widget">
                 <div class="widget-header">
@@ -377,7 +360,7 @@
                 <div class="widget-body">
                     <div class="quick-stats">
                         <div class="quick-stat">
-                            <span class="quick-stat-label">Months Played</span>
+                            <span class="quick-stat-label">Work Sessions</span>
                             <span class="quick-stat-value" id="stat-kills">0</span>
                         </div>
                         <div class="quick-stat">
@@ -422,7 +405,7 @@
                 <div class="widget-body">
                     <div class="tips-content" style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
                         <p>💡 <strong>Tip:</strong> Build your emergency fund first before investing!</p>
-                        <p>📊 Aim to save at least 20% of your monthly income.</p>
+                        <p>📊 Save regularly and invest your earnings wisely.</p>
                         <p>🎯 Set clear financial goals and track your progress.</p>
                     </div>
                 </div>
@@ -443,24 +426,24 @@
                     <div style="background: var(--bg-elevated); padding: 20px; border-radius: 10px; margin: 20px 0;">
                         <h3 style="color: var(--accent-primary); margin-bottom: 15px;">💰 How to Play (It's Easy!):</h3>
                         <ol style="padding-left: 20px;">
-                            <li style="margin-bottom: 12px;"><strong>Time Flows Automatically</strong><br>Every 30 seconds = 1 month. You earn salary and pay expenses automatically.</li>
-                            <li style="margin-bottom: 12px;"><strong>Build Your Wealth</strong><br>Apply for better jobs, start businesses, and make investments.</li>
-                            <li style="margin-bottom: 12px;"><strong>Watch Your Money Grow</strong><br>Check your Net Worth growing over time!</li>
-                            <li style="margin-bottom: 12px;"><strong>Achieve Goals</strong><br>Complete goals to earn bonus money and unlock new titles!</li>
+                            <li style="margin-bottom: 12px;"><strong>Click WORK to Earn Money</strong><br>Uses 10 energy, earns cash. Energy regens 1/second!</li>
+                            <li style="margin-bottom: 12px;"><strong>Get Better Jobs</strong><br>Higher paying jobs = more money per click!</li>
+                            <li style="margin-bottom: 12px;"><strong>Start Businesses</strong><br>Earn passive income every time you work!</li>
+                            <li style="margin-bottom: 12px;"><strong>Level Up & Get Stronger</strong><br>Gain XP from working, level up for more energy!</li>
                         </ol>
                     </div>
 
                     <div style="background: var(--bg-surface-hover); padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid var(--accent-primary);">
                         <p><strong>💡 Quick Start Guide:</strong></p>
-                        <p>1️⃣ Click <strong>"Career"</strong> → Apply for a better paying job<br>
-                        2️⃣ Watch your cash grow each month<br>
-                        3️⃣ Click <strong>"Business"</strong> → Start a Sari-Sari Store<br>
-                        4️⃣ Click <strong>"Goals"</strong> → Track your progress!</p>
+                        <p>1️⃣ Click the big <strong>"WORK"</strong> button to earn money<br>
+                        2️⃣ Click <strong>"Career"</strong> → Get a better paying job<br>
+                        3️⃣ Keep clicking WORK to earn more cash<br>
+                        4️⃣ Click <strong>"Business"</strong> → Buy a Sari-Sari Store for passive income!</p>
                     </div>
 
                     <p style="text-align: center; font-size: 14px; color: var(--text-secondary); margin-top: 20px;">
-                        ⌨️ Press ESC anytime to return to Dashboard<br>
-                        🕐 Skip months faster with the "Skip Month" button
+                        ⚡ Energy regenerates automatically (1 per second)<br>
+                        ⌨️ Press ESC anytime to return to Dashboard
                     </p>
                 </div>
             </div>
@@ -480,7 +463,7 @@
             <button class="guidance-close" onclick="toggleGuidance()">×</button>
         </div>
         <div class="guidance-body" id="guidance-text">
-            Wait for your first salary! (30 seconds)
+            Click the WORK button to start earning money!
         </div>
         <div class="guidance-progress">
             <div class="guidance-progress-bar" id="guidance-progress"></div>

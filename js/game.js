@@ -14,24 +14,25 @@ class PinoyRPG {
         this.skills = [];
         this.activeEvents = [];
         this.gameStats = {
-            monthsPlayed: 0,
             totalEarned: 0,
             totalSaved: 0,
+            totalWorkActions: 0,
             goalsAchieved: 0,
             startTime: Date.now()
         };
-        this.monthlyExpenses = this.createMonthlyExpenses();
         this.jobMarket = this.createJobMarket();
         this.investmentOptions = this.createInvestmentOptions();
         this.businessOpportunities = this.createBusinessOpportunities();
         this.educationOptions = this.createEducationOptions();
 
-        this.paused = false;
-        this.monthTimer = null;
-
         // Achievement flags
         this.achievements_100k = false;
         this.achievements_1m = false;
+
+        // Action-based progression (not time-based)
+        this.workEnergy = 100;
+        this.maxWorkEnergy = 100;
+        this.energyRegenRate = 1; // energy per second
 
         this.init();
     }
@@ -39,11 +40,11 @@ class PinoyRPG {
     init() {
         this.loadGame();
         this.updateUI();
-        this.startMonthTimer();
         this.initializeGoals();
         this.updateGuidance();
+        this.startEnergyRegen();
         this.addActivityLog('Welcome to your financial journey, Kababayan!', '🎮');
-        this.addNotification('Start your journey to financial freedom!', '🏝️');
+        this.addNotification('Click WORK to earn money!', '💼');
     }
 
     createPlayer() {
@@ -58,13 +59,11 @@ class PinoyRPG {
                 skills: []
             },
             financials: {
-                cash: 5000,
+                cash: 0,
                 savings: 0,
                 emergencyFund: 0,
-                totalNetWorth: 5000,
-                monthlyIncome: 15000,
-                monthlyExpenses: 12000,
-                debt: 0
+                totalNetWorth: 0,
+                totalEarned: 0
             },
             attributes: {
                 financialLiteracy: 1,
@@ -76,37 +75,90 @@ class PinoyRPG {
             },
             location: 'Barangay Marilag, Manila',
             title: 'The Hopeful',
-            family: {
-                members: 5,
-                monthlySupport: 3000,
-                happiness: 70
-            },
-            monthlyBudget: {
-                food: 4000,
-                transportation: 1500,
-                utilities: 1500,
-                familySupport: 3000,
-                entertainment: 500,
-                savings: 0,
-                investments: 0
-            }
+            totalWorkDone: 0,
+            level: 1,
+            xp: 0,
+            xpToNextLevel: 100
         };
     }
 
-    createMonthlyExpenses() {
-        return {
-            fixed: [
-                { name: 'Rent/Mortgage', amount: 0, category: 'housing', icon: '🏠' },
-                { name: 'Family Support', amount: 3000, category: 'family', icon: '👨‍👩‍👧‍👦' },
-                { name: 'Utilities (Kuryente, Tubig)', amount: 1500, category: 'utilities', icon: '💡' }
-            ],
-            variable: [
-                { name: 'Food & Groceries', amount: 4000, category: 'food', icon: '🍚' },
-                { name: 'Transportation (Jeepney/Bus)', amount: 1500, category: 'transport', icon: '🚌' },
-                { name: 'Load & Internet', amount: 500, category: 'communication', icon: '📱' },
-                { name: 'Entertainment', amount: 500, category: 'entertainment', icon: '🎮' }
-            ]
-        };
+    // === WORK & ENERGY SYSTEM ===
+    doWork() {
+        const energyCost = 10;
+
+        if (this.workEnergy < energyCost) {
+            this.addNotification('Not enough energy! Wait for it to regenerate.', '⚠️');
+            return;
+        }
+
+        this.workEnergy -= energyCost;
+
+        // Calculate earnings based on job
+        const baseEarnings = this.player.currentJob.monthlySalary / 30; // Daily rate
+        const bonus = Math.random() * 0.3; // 0-30% bonus
+        const earnings = Math.floor(baseEarnings * (1 + bonus));
+
+        this.player.financials.cash += earnings;
+        this.player.financials.totalEarned += earnings;
+        this.player.totalWorkDone++;
+        this.gameStats.totalWorkActions++;
+
+        // Gain XP
+        this.gainXP(5);
+
+        this.addActivityLog(`Worked and earned ₱${earnings.toLocaleString()}!`, '💼');
+
+        // Check for work achievements
+        if (this.player.totalWorkDone === 10) {
+            this.showAchievement('Hard Worker! 10 work sessions', '💪');
+        }
+        if (this.player.totalWorkDone === 100) {
+            this.showAchievement('Dedicated! 100 work sessions', '🏆');
+        }
+
+        this.updateUI();
+        this.updateGuidance();
+        this.calculateNetWorth();
+        this.checkGoalsProgress();
+
+        // Passive income from businesses
+        this.earnPassiveIncome();
+    }
+
+    startEnergyRegen() {
+        setInterval(() => {
+            if (this.workEnergy < this.maxWorkEnergy) {
+                this.workEnergy = Math.min(this.workEnergy + this.energyRegenRate, this.maxWorkEnergy);
+                this.updateEnergyDisplay();
+            }
+        }, 1000); // Regen every second
+    }
+
+    updateEnergyDisplay() {
+        const energyPercent = (this.workEnergy / this.maxWorkEnergy) * 100;
+        const energyBar = document.getElementById('mp-bar');
+        const energyText = document.getElementById('current-mp');
+        const energyMax = document.getElementById('max-mp');
+
+        if (energyBar) energyBar.style.width = energyPercent + '%';
+        if (energyText) energyText.textContent = Math.floor(this.workEnergy);
+        if (energyMax) energyMax.textContent = this.maxWorkEnergy;
+    }
+
+    earnPassiveIncome() {
+        // Businesses earn when you work
+        this.businesses.forEach(business => {
+            const template = this.businessOpportunities.find(b => b.id === business.type);
+            if (!template) return;
+
+            const profit = Math.floor((template.monthlyProfit / 30) * business.efficiency);
+            this.player.financials.cash += profit;
+            business.totalProfit += profit;
+
+            if (profit > 0) {
+                this.addActivityLog(`${business.name} earned ₱${profit.toLocaleString()}`, template.icon);
+            }
+        });
     }
 
     createJobMarket() {
@@ -532,254 +584,35 @@ class PinoyRPG {
         ];
     }
 
-    // === MONTH PROGRESSION SYSTEM ===
-    startMonthTimer() {
-        // Auto-advance month every 30 seconds (configurable)
-        this.monthTimer = setInterval(() => {
-            if (!this.paused) {
-                this.advanceMonth();
-            }
-        }, 30000); // 30 seconds = 1 month
-    }
+    // === XP & LEVELING ===
+    gainXP(amount) {
+        this.player.xp += amount;
 
-    advanceMonth() {
-        this.gameStats.monthsPlayed++;
-        this.player.age += 1/12; // Age in months
+        while (this.player.xp >= this.player.xpToNextLevel) {
+            this.levelUp();
+        }
 
-        // Process monthly income
-        this.processMonthlySalary();
-
-        // Process monthly expenses
-        this.processMonthlyExpenses();
-
-        // Process investments returns
-        this.processInvestmentReturns();
-
-        // Process business income
-        this.processBusinessIncome();
-
-        // Random life events
-        this.triggerRandomEvent();
-
-        // Update UI
         this.updateUI();
-        this.updateFinancialUI();
-
-        // Check goals
-        this.checkGoalsProgress();
-
-        // Save game
-        this.saveGame();
-
-        this.addActivityLog(`Month ${this.gameStats.monthsPlayed} completed`, '📅');
-        this.addNotification(`New month! Check your finances.`, '📅');
-
-        // Update guidance
-        this.updateGuidance();
     }
 
-    processMonthlySalary() {
-        const salary = this.player.currentJob.monthlySalary;
-        this.player.financials.cash += salary;
-        this.player.financials.monthlyIncome = salary + this.getPassiveIncome();
-        this.gameStats.totalEarned += salary;
+    levelUp() {
+        this.player.xp -= this.player.xpToNextLevel;
+        this.player.level++;
+        this.player.xpToNextLevel = Math.floor(this.player.xpToNextLevel * 1.5);
 
-        this.addActivityLog(`Received salary: ₱${salary.toLocaleString()}`, '💵');
-    }
+        // Increase max energy
+        this.maxWorkEnergy += 10;
+        this.workEnergy = this.maxWorkEnergy; // Refill on level up
 
-    processMonthlyExpenses() {
-        let totalExpenses = 0;
+        // Increase attributes slightly
+        this.player.attributes.workEthic += 1;
+        this.player.attributes.discipline += 1;
 
-        // Fixed expenses
-        this.monthlyExpenses.fixed.forEach(expense => {
-            if (expense.amount > 0) {
-                this.player.financials.cash -= expense.amount;
-                totalExpenses += expense.amount;
-            }
-        });
+        this.showAchievement(`Level Up! Now level ${this.player.level}!`, '🎉');
+        this.addActivityLog(`Level Up! Now level ${this.player.level}`, '🎉');
 
-        // Variable expenses from budget
-        totalExpenses += this.player.monthlyBudget.food;
-        totalExpenses += this.player.monthlyBudget.transportation;
-        totalExpenses += this.player.monthlyBudget.utilities;
-        totalExpenses += this.player.monthlyBudget.familySupport;
-        totalExpenses += this.player.monthlyBudget.entertainment;
-
-        this.player.financials.cash -= totalExpenses;
-        this.player.financials.monthlyExpenses = totalExpenses;
-
-        // Process savings
-        if (this.player.monthlyBudget.savings > 0) {
-            this.player.financials.savings += this.player.monthlyBudget.savings;
-            this.player.financials.cash -= this.player.monthlyBudget.savings;
-            this.gameStats.totalSaved += this.player.monthlyBudget.savings;
-        }
-
-        this.addActivityLog(`Monthly expenses: ₱${totalExpenses.toLocaleString()}`, '💸');
-
-        // Warning if low on cash
-        if (this.player.financials.cash < 5000) {
-            this.addNotification('Warning: Low on cash! Budget wisely.', '⚠️');
-        }
-
-        // Game over if negative cash and no emergency fund
-        if (this.player.financials.cash < 0 && this.player.financials.emergencyFund === 0) {
-            this.gameOver();
-        }
-    }
-
-    processInvestmentReturns() {
-        this.investments.forEach(investment => {
-            const option = this.investmentOptions.find(opt => opt.id === investment.type);
-            if (!option) return;
-
-            // Monthly return
-            const monthlyReturn = (investment.amount * option.expectedReturn / 100) / 12;
-
-            // Add volatility for stocks/crypto
-            let actualReturn = monthlyReturn;
-            if (option.volatility) {
-                const variance = (Math.random() - 0.5) * 2 * option.volatility / 100;
-                actualReturn = monthlyReturn * (1 + variance);
-            }
-
-            investment.amount += actualReturn;
-            investment.totalReturns += actualReturn;
-        });
-
-        this.calculateNetWorth();
-    }
-
-    processBusinessIncome() {
-        this.businesses.forEach(business => {
-            const template = this.businessOpportunities.find(b => b.id === business.type);
-            if (!template) return;
-
-            // Monthly profit with some variance
-            const variance = 0.8 + (Math.random() * 0.4); // 80% to 120%
-            const profit = Math.floor(template.monthlyProfit * variance * business.efficiency);
-
-            this.player.financials.cash += profit;
-            business.totalProfit += profit;
-            this.gameStats.totalEarned += profit;
-
-            this.addActivityLog(`${business.name} earned ₱${profit.toLocaleString()}`, template.icon);
-        });
-    }
-
-    getPassiveIncome() {
-        let passive = 0;
-
-        // Business income
-        this.businesses.forEach(business => {
-            const template = this.businessOpportunities.find(b => b.id === business.type);
-            if (template) {
-                passive += template.monthlyProfit * business.efficiency;
-            }
-        });
-
-        // Rental income from real estate
-        this.investments.forEach(investment => {
-            const option = this.investmentOptions.find(opt => opt.id === investment.type);
-            if (option && option.rentalYield) {
-                passive += (investment.amount * option.rentalYield / 100) / 12;
-            }
-        });
-
-        return Math.floor(passive);
-    }
-
-    triggerRandomEvent() {
-        const eventChance = Math.random();
-
-        if (eventChance > 0.7) { // 30% chance per month
-            const events = [
-                {
-                    type: 'family-emergency',
-                    title: 'Family Medical Emergency',
-                    desc: 'A family member needs medical help',
-                    cost: 15000,
-                    icon: '🚑',
-                    impact: { familyHappiness: -10 }
-                },
-                {
-                    type: 'wedding',
-                    title: 'Family Wedding',
-                    desc: 'Your cousin is getting married, abuloy expected',
-                    cost: 3000,
-                    icon: '💒',
-                    impact: { familyHappiness: 5 }
-                },
-                {
-                    type: 'fiesta',
-                    title: 'Barangay Fiesta',
-                    desc: 'Time to celebrate! (Optional spending)',
-                    cost: 2000,
-                    optional: true,
-                    icon: '🎉',
-                    impact: { happiness: 10 }
-                },
-                {
-                    type: 'bonus',
-                    title: 'Work Bonus!',
-                    desc: 'Great job! You received a bonus',
-                    gain: 5000,
-                    icon: '🎁',
-                    impact: { happiness: 10 }
-                },
-                {
-                    type: 'side-hustle',
-                    title: 'Side Hustle Opportunity',
-                    desc: 'Weekend part-time work available',
-                    gain: 8000,
-                    icon: '💼',
-                    impact: {}
-                },
-                {
-                    type: 'investment-tip',
-                    title: 'Investment Opportunity',
-                    desc: 'Friend recommends a good investment',
-                    icon: '💡',
-                    action: 'Consider investing'
-                }
-            ];
-
-            const randomEvent = events[Math.floor(Math.random() * events.length)];
-            this.handleLifeEvent(randomEvent);
-        }
-    }
-
-    handleLifeEvent(event) {
-        this.addNotification(`Life Event: ${event.title}`, event.icon);
-        this.addActivityLog(event.desc, event.icon);
-
-        if (event.cost && !event.optional) {
-            // Check if can afford
-            if (this.player.financials.cash >= event.cost) {
-                this.player.financials.cash -= event.cost;
-                this.addActivityLog(`Paid ₱${event.cost.toLocaleString()} for ${event.title}`, '💸');
-            } else if (this.player.financials.emergencyFund >= event.cost) {
-                this.player.financials.emergencyFund -= event.cost;
-                this.addActivityLog(`Used emergency fund for ${event.title}`, '🆘');
-            } else {
-                this.addNotification('Not enough money! Taking debt...', '⚠️');
-                this.player.financials.debt += event.cost;
-                this.player.family.happiness -= 20;
-            }
-        }
-
-        if (event.gain) {
-            this.player.financials.cash += event.gain;
-            this.addActivityLog(`Earned ₱${event.gain.toLocaleString()}`, '💰');
-        }
-
-        // Apply impacts
-        if (event.impact) {
-            if (event.impact.familyHappiness) {
-                this.player.family.happiness += event.impact.familyHappiness;
-            }
-        }
-
+        // Update title
+        this.updatePlayerTitle();
         this.updateUI();
     }
 
@@ -838,7 +671,7 @@ class PinoyRPG {
             amount: amount,
             initialAmount: amount,
             totalReturns: 0,
-            startMonth: this.gameStats.monthsPlayed
+            startTime: Date.now()
         };
 
         this.investments.push(investment);
@@ -879,7 +712,7 @@ class PinoyRPG {
             monthlyProfit: business.monthlyProfit,
             totalProfit: 0,
             efficiency: 1.0,
-            startMonth: this.gameStats.monthsPlayed
+            startTime: Date.now()
         };
 
         this.businesses.push(newBusiness);
@@ -932,14 +765,6 @@ class PinoyRPG {
         this.saveGame();
     }
 
-    updateBudget(category, amount) {
-        if (this.player.monthlyBudget[category] !== undefined) {
-            this.player.monthlyBudget[category] = amount;
-            this.saveGame();
-            this.updateFinancialUI();
-        }
-    }
-
     calculateNetWorth() {
         let netWorth = this.player.financials.cash;
         netWorth += this.player.financials.savings;
@@ -975,6 +800,17 @@ class PinoyRPG {
 
     // === GOALS SYSTEM ===
 
+    getPassiveIncome() {
+        let totalPassive = 0;
+        this.businesses.forEach(business => {
+            const template = this.businessOpportunities.find(b => b.id === business.type);
+            if (template) {
+                totalPassive += template.monthlyProfit * business.efficiency;
+            }
+        });
+        return totalPassive;
+    }
+
     checkGoalsProgress() {
         this.goals.forEach(goal => {
             if (goal.completed) return;
@@ -990,7 +826,8 @@ class PinoyRPG {
                     goal.current = this.getPassiveIncome();
                     break;
                 case 'freedom':
-                    if (this.getPassiveIncome() >= this.player.financials.monthlyExpenses) {
+                    // Financial freedom when passive income is substantial
+                    if (this.getPassiveIncome() >= 20000) {
                         goal.current = 1;
                     }
                     break;
@@ -1068,36 +905,33 @@ class PinoyRPG {
         this.updatePlayerStats();
         this.updateFinancialDisplay();
         this.updateAttributesDisplay();
+        this.updateStatsUI();
         this.saveGame();
     }
 
     updatePlayerStats() {
-        document.getElementById('player-level').textContent = Math.floor(this.player.age);
+        document.getElementById('player-level').textContent = this.player.level;
         document.getElementById('player-name').textContent = this.player.name;
         document.getElementById('player-name-mini').textContent = this.player.name;
         document.getElementById('player-title').textContent = this.player.title;
         document.getElementById('player-class').textContent = this.player.currentJob.title;
 
-        // Use cash for HP, savings for MP, net worth progress for XP
-        const maxCash = this.player.currentJob.monthlySalary * 3;
-        const cashPercent = Math.min((this.player.financials.cash / maxCash) * 100, 100);
-        document.getElementById('hp-bar').style.width = cashPercent + '%';
+        // Cash (no bar, just display)
         document.getElementById('current-hp').textContent = '₱' + Math.floor(this.player.financials.cash).toLocaleString();
-        document.getElementById('max-hp').textContent = 'Cash';
+        document.getElementById('max-hp').textContent = '';
+        document.getElementById('hp-bar').style.width = '100%';
 
-        // Savings
-        const maxSavings = 100000;
-        const savingsPercent = Math.min((this.player.financials.savings / maxSavings) * 100, 100);
-        document.getElementById('mp-bar').style.width = savingsPercent + '%';
-        document.getElementById('current-mp').textContent = '₱' + Math.floor(this.player.financials.savings).toLocaleString();
-        document.getElementById('max-mp').textContent = 'Savings';
+        // Energy
+        const energyPercent = (this.workEnergy / this.maxWorkEnergy) * 100;
+        document.getElementById('mp-bar').style.width = energyPercent + '%';
+        document.getElementById('current-mp').textContent = Math.floor(this.workEnergy);
+        document.getElementById('max-mp').textContent = this.maxWorkEnergy;
 
-        // Net Worth Progress
-        const netWorthTarget = 1000000;
-        const networthPercent = Math.min((this.player.financials.totalNetWorth / netWorthTarget) * 100, 100);
-        document.getElementById('xp-bar').style.width = networthPercent + '%';
-        document.getElementById('current-xp').textContent = '₱' + Math.floor(this.player.financials.totalNetWorth).toLocaleString();
-        document.getElementById('next-xp').textContent = 'Net Worth';
+        // XP Progress
+        const xpPercent = (this.player.xp / this.player.xpToNextLevel) * 100;
+        document.getElementById('xp-bar').style.width = xpPercent + '%';
+        document.getElementById('current-xp').textContent = Math.floor(this.player.xp);
+        document.getElementById('next-xp').textContent = this.player.xpToNextLevel;
     }
 
     updateFinancialDisplay() {
@@ -1211,7 +1045,7 @@ class PinoyRPG {
 
     updateStatsUI() {
         if (document.getElementById('stat-kills')) {
-            document.getElementById('stat-kills').textContent = this.gameStats.monthsPlayed;
+            document.getElementById('stat-kills').textContent = this.gameStats.totalWorkActions;
         }
         if (document.getElementById('stat-quests')) {
             document.getElementById('stat-quests').textContent = this.gameStats.goalsAchieved;
@@ -1222,6 +1056,17 @@ class PinoyRPG {
         }
         if (document.getElementById('stat-gold-earned')) {
             document.getElementById('stat-gold-earned').textContent = '₱' + this.gameStats.totalEarned.toLocaleString();
+        }
+
+        // Update dashboard progress stats
+        if (document.getElementById('total-work-done')) {
+            document.getElementById('total-work-done').textContent = this.player.totalWorkDone;
+        }
+        if (document.getElementById('player-level-stat')) {
+            document.getElementById('player-level-stat').textContent = this.player.level;
+        }
+        if (document.getElementById('net-worth-stat')) {
+            document.getElementById('net-worth-stat').textContent = '₱' + Math.floor(this.player.financials.totalNetWorth).toLocaleString();
         }
     }
 
@@ -1328,21 +1173,24 @@ class PinoyRPG {
         let message = '';
         let progressPercent = 0;
 
-        // Smart guidance based on player progress
-        if (this.gameStats.monthsPlayed === 0) {
-            message = '💵 Wait for your first salary! Each month = 30 seconds.';
+        // Smart guidance based on player progress (action-based)
+        if (this.player.totalWorkDone === 0) {
+            message = '💼 Click the <strong>WORK</strong> button to start earning money!';
             progressPercent = 0;
-        } else if (this.player.currentJob.title === 'Minimum Wage Worker') {
+        } else if (this.player.totalWorkDone < 5) {
+            message = '💪 Keep working! Energy regenerates automatically. Work more to earn cash!';
+            progressPercent = 5;
+        } else if (this.player.currentJob.title === 'Minimum Wage Worker' && this.player.financials.cash >= 1000) {
             message = '💼 Get a better job! Click <strong>Career</strong> and apply for Call Center Agent (₱25k/month)';
             progressPercent = 10;
         } else if (this.businesses.length === 0 && this.player.financials.cash >= 15000) {
-            message = '🏪 You have enough cash! Click <strong>Business</strong> and start a Sari-Sari Store!';
+            message = '🏪 You have enough cash! Click <strong>Business</strong> and start a Sari-Sari Store for passive income!';
             progressPercent = 30;
         } else if (this.investments.length === 0 && this.player.financials.cash >= 5000) {
             message = '📈 Start investing! Click <strong>Investments</strong> and try Pag-IBIG MP2 (₱500 min)';
             progressPercent = 40;
-        } else if (this.player.financials.emergencyFund === 0 && this.player.financials.cash >= 10000) {
-            message = '🆘 Build emergency fund! Save ₱72,000 for 6 months expenses (check Goals)';
+        } else if (this.player.financials.emergencyFund < 50000 && this.player.financials.cash >= 10000) {
+            message = '🆘 Build your emergency fund! Check <strong>Goals</strong> to track progress';
             progressPercent = 50;
         } else if (this.player.financials.totalNetWorth < 100000) {
             message = '💎 Keep growing! Net worth: ₱' + Math.floor(this.player.financials.totalNetWorth).toLocaleString() + ' / ₱100,000';
@@ -1351,16 +1199,8 @@ class PinoyRPG {
             message = '💰 Millionaire path! Net worth: ₱' + Math.floor(this.player.financials.totalNetWorth).toLocaleString() + ' / ₱1M';
             progressPercent = (this.player.financials.totalNetWorth / 1000000) * 100;
         } else {
-            const passiveIncome = this.getPassiveIncome();
-            const expenses = this.player.financials.monthlyExpenses;
-            if (passiveIncome < expenses) {
-                message = '🎯 Almost there! Passive: ₱' + passiveIncome.toLocaleString() + ' / ₱' + expenses.toLocaleString() + ' needed';
-                progressPercent = (passiveIncome / expenses) * 100;
-            } else {
-                message = '🎉 FINANCIAL FREEDOM ACHIEVED! You win! Passive income > Expenses!';
-                progressPercent = 100;
-                this.showAchievement('🏆 FINANCIAL FREEDOM ACHIEVED!', '🎉');
-            }
+            message = '🎉 MILLIONAIRE STATUS! Keep building businesses and investments!';
+            progressPercent = 100;
         }
 
         guidance.innerHTML = message;
