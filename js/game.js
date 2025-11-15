@@ -34,6 +34,14 @@ const gameState = {
         },
         transactions: []
     },
+    activityLog: [],
+    assets: {
+        investments: []
+    },
+    cryptoMarket: {
+        lastPriceUpdate: 0,
+        nextPriceUpdate: 0
+    },
     settings: {
         notifications: true,
         sound: true,
@@ -372,13 +380,15 @@ function initGame() {
     loadGame();
     initTavernSystem();
     initMarketplace();
+    initCryptoMarket();
     updateUI();
-    
+
     // Set up intervals for game updates
     setInterval(updateGame, 1000); // Update every second
     setInterval(earnBusinessIncome, 60000); // Earn business income every minute
     setInterval(updateMarketPrices, 300000); // Update market prices every 5 minutes
-    
+    setInterval(updateCryptoTimer, 1000); // Update crypto timer every second
+
     // Set up tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => switchTab(btn.dataset.tab));
@@ -483,11 +493,50 @@ function initGame() {
             const gameType = e.target.dataset.game;
             openMiniGameModal(gameType);
         }
+
+        // Set up investment buttons
+        if (e.target.classList.contains('withdraw-investment-btn')) {
+            const investmentId = e.target.dataset.id;
+            withdrawInvestment(investmentId);
+        }
+
+        if (e.target.classList.contains('reinvest-investment-btn')) {
+            const investmentId = e.target.dataset.id;
+            reinvestInvestment(investmentId);
+        }
+
+        // Set up crypto trading buttons
+        if (e.target.classList.contains('buy-crypto-btn-new')) {
+            const cryptoId = e.target.dataset.id;
+            buyCryptoNew(cryptoId);
+        }
+
+        if (e.target.classList.contains('sell-crypto-btn-new')) {
+            const cryptoId = e.target.dataset.id;
+            sellCryptoNew(cryptoId);
+        }
     });
-    
+
+    // Set up create investment button
+    const createInvestmentBtn = document.getElementById('create-investment-btn');
+    if (createInvestmentBtn) {
+        createInvestmentBtn.addEventListener('click', () => {
+            const amount = prompt('Enter investment amount (minimum ₱5,000):');
+            if (amount) {
+                const investAmount = parseFloat(amount);
+                const type = prompt('Enter investment type (interest/stocks/mutual):');
+                if (type && ['interest', 'stocks', 'mutual'].includes(type.toLowerCase())) {
+                    createInvestment(investAmount, type.toLowerCase());
+                } else {
+                    showNotification('Invalid investment type!', 'investment');
+                }
+            }
+        });
+    }
+
     // Set up modal close button
     document.querySelector('.close-modal').addEventListener('click', closeMiniGameModal);
-    
+
     // Close modal when clicking outside
     document.getElementById('mini-game-modal').addEventListener('click', function(e) {
         if (e.target.id === 'mini-game-modal') {
@@ -756,6 +805,8 @@ function switchTab(tabName) {
         updateEmployeesTab();
     } else if (tabName === 'marketplace') {
         updateMarketplaceTab();
+    } else if (tabName === 'crypto') {
+        updateCryptoUI();
     } else if (tabName === 'inventory') {
         updateInventoryTab();
     }
@@ -1750,13 +1801,13 @@ function updateInventoryTab() {
     const paluganMembersEl = document.getElementById('palugan-members');
     const paluganFundsEl = document.getElementById('palugan-funds');
     const paluganStatusEl = document.getElementById('palugan-status');
-    
+
     if (inventoryMoneyEl) inventoryMoneyEl.textContent = (gameState.inventory?.money || 0).toLocaleString();
     if (savingsAmountEl) savingsAmountEl.textContent = (gameState.inventory?.savings || 0).toLocaleString();
     if (licensesCountEl) licensesCountEl.textContent = (gameState.businesses || []).length;
     if (equipmentCountEl) equipmentCountEl.textContent = 0; // Placeholder
     if (bayanihanPointsEl) bayanihanPointsEl.textContent = bayanihanPoints || 0;
-    
+
     // Update PALUGAN information
     if (paluganMembersEl) paluganMembersEl.textContent = (palugan.members || []).length;
     if (paluganFundsEl) paluganFundsEl.textContent = (palugan.funds || 0).toLocaleString();
@@ -1764,6 +1815,432 @@ function updateInventoryTab() {
         const isMember = palugan.members?.includes(gameState.playerName) || false;
         paluganStatusEl.textContent = isMember ? 'Member' : 'Not a member';
     }
+
+    // Update investment assets
+    updateInvestmentAssets();
+
+    // Update activity log
+    updateActivityLogUI();
+}
+
+// Generate unique ID
+function generateInvestmentId() {
+    return 'inv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// Create new investment
+function createInvestment(amount, type) {
+    if (!gameState.assets) {
+        gameState.assets = { investments: [] };
+    }
+
+    if (gameState.money < amount) {
+        showNotification('Insufficient funds!', 'investment');
+        return false;
+    }
+
+    if (amount < 5000) {
+        showNotification('Minimum investment is ₱5,000!', 'investment');
+        return false;
+    }
+
+    // Deduct money
+    gameState.money -= amount;
+    gameState.inventory.money -= amount;
+
+    // Calculate duration based on type (scaled for game time)
+    let duration, interestRate, name;
+    if (type === 'interest') {
+        duration = 10 * 60 * 1000; // 10 minutes (represents 1 year in game time)
+        interestRate = 0.05; // 5% annual interest
+        name = 'Interest Account';
+    } else if (type === 'stocks') {
+        duration = 5 * 60 * 1000; // 5 minutes (represents 6 months in game time - dividend twice a year)
+        interestRate = 0.03; // 3% dividend
+        name = 'Stock Investment';
+    } else if (type === 'mutual') {
+        duration = 5 * 60 * 1000; // 5 minutes (represents 6 months in game time - dividend twice a year)
+        interestRate = 0.04; // 4% dividend
+        name = 'Mutual Fund';
+    }
+
+    const investment = {
+        id: generateInvestmentId(),
+        name: name,
+        type: type,
+        principal: amount,
+        interestRate: interestRate,
+        startTime: Date.now(),
+        duration: duration,
+        matured: false
+    };
+
+    gameState.assets.investments.push(investment);
+    showNotification(`Created ${name} with ₱${amount.toLocaleString()}!`, 'investment');
+    updateUI();
+    saveGame();
+    return true;
+}
+
+// Update investment assets display
+function updateInvestmentAssets() {
+    const investmentsList = document.getElementById('investment-assets-list');
+    if (!investmentsList) return;
+
+    if (!gameState.assets || !gameState.assets.investments || gameState.assets.investments.length === 0) {
+        investmentsList.innerHTML = '<div class="empty-state"><i class="fas fa-chart-pie"></i> No investment assets yet. Create one to start earning!</div>';
+        return;
+    }
+
+    const now = Date.now();
+    investmentsList.innerHTML = gameState.assets.investments.map(investment => {
+        const elapsed = now - investment.startTime;
+        const progress = Math.min(100, (elapsed / investment.duration) * 100);
+        const matured = progress >= 100;
+        const interest = investment.principal * investment.interestRate;
+        const total = investment.principal + interest;
+
+        const typeIcons = {
+            'interest': 'fa-piggy-bank',
+            'stocks': 'fa-chart-line',
+            'mutual': 'fa-chart-area'
+        };
+
+        const icon = typeIcons[investment.type] || 'fa-chart-pie';
+
+        if (matured && !investment.matured) {
+            investment.matured = true;
+            showNotification(`Your ${investment.name} has matured! Total: ₱${total.toLocaleString()}`, 'investment');
+        }
+
+        return `
+            <div class="investment-card ${matured ? 'matured' : ''}">
+                <div class="investment-header">
+                    <div class="investment-icon"><i class="fas ${icon}"></i></div>
+                    <div class="investment-info">
+                        <h4>${investment.name}</h4>
+                        <p>Principal: ₱${investment.principal.toLocaleString()} | Interest: ${(investment.interestRate * 100).toFixed(1)}%</p>
+                    </div>
+                </div>
+                <div class="investment-progress">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: ${progress}%"></div>
+                    </div>
+                    <p class="progress-text">${progress.toFixed(1)}% Complete</p>
+                </div>
+                ${matured ? `
+                    <div class="investment-matured-info">
+                        <p class="matured-label"><i class="fas fa-check-circle"></i> Investment Matured!</p>
+                        <p class="matured-total">Total Value: ₱${total.toLocaleString()}</p>
+                    </div>
+                    <div class="investment-actions">
+                        <button class="withdraw-investment-btn" data-id="${investment.id}">
+                            <i class="fas fa-hand-holding-usd"></i> Withdraw
+                        </button>
+                        <button class="reinvest-investment-btn" data-id="${investment.id}">
+                            <i class="fas fa-redo"></i> Reinvest
+                        </button>
+                    </div>
+                ` : `
+                    <div class="investment-pending">
+                        <p><i class="fas fa-clock"></i> In Progress...</p>
+                    </div>
+                `}
+            </div>
+        `;
+    }).join('');
+}
+
+// Withdraw investment
+function withdrawInvestment(investmentId) {
+    const investment = gameState.assets.investments.find(inv => inv.id === investmentId);
+    if (!investment || !investment.matured) {
+        showNotification('Investment not ready for withdrawal!', 'investment');
+        return;
+    }
+
+    const total = investment.principal + (investment.principal * investment.interestRate);
+    gameState.money += total;
+    gameState.inventory.money += total;
+
+    // Remove investment
+    gameState.assets.investments = gameState.assets.investments.filter(inv => inv.id !== investmentId);
+
+    showNotification(`Withdrew ₱${total.toLocaleString()} from ${investment.name}!`, 'investment');
+    updateUI();
+    saveGame();
+}
+
+// Reinvest investment
+function reinvestInvestment(investmentId) {
+    const investment = gameState.assets.investments.find(inv => inv.id === investmentId);
+    if (!investment || !investment.matured) {
+        showNotification('Investment not ready for reinvestment!', 'investment');
+        return;
+    }
+
+    const total = investment.principal + (investment.principal * investment.interestRate);
+
+    // Remove old investment
+    gameState.assets.investments = gameState.assets.investments.filter(inv => inv.id !== investmentId);
+
+    // Create new investment with total amount
+    gameState.money += total;
+    gameState.inventory.money += total;
+    createInvestment(total, investment.type);
+
+    showNotification(`Reinvested ₱${total.toLocaleString()} in ${investment.name}!`, 'investment');
+}
+
+// Initialize crypto market with 24-hour timer (scaled for game time)
+function initCryptoMarket() {
+    if (!gameState.cryptoMarket) {
+        gameState.cryptoMarket = {
+            lastPriceUpdate: Date.now(),
+            nextPriceUpdate: Date.now() + (5 * 60 * 1000), // 5 minutes (represents 24 hours in game time)
+            cryptoData: []
+        };
+    }
+
+    // Initialize top 10 crypto data if not exists
+    if (!gameState.cryptoMarket.cryptoData || gameState.cryptoMarket.cryptoData.length === 0) {
+        gameState.cryptoMarket.cryptoData = [
+            { id: 'btc', name: 'Bitcoin', symbol: 'BTC', price: 3000000, priceChange: 0, balance: 0 },
+            { id: 'eth', name: 'Ethereum', symbol: 'ETH', price: 150000, priceChange: 0, balance: 0 },
+            { id: 'bnb', name: 'Binance Coin', symbol: 'BNB', price: 15000, priceChange: 0, balance: 0 },
+            { id: 'xrp', name: 'Ripple', symbol: 'XRP', price: 30, priceChange: 0, balance: 0 },
+            { id: 'ada', name: 'Cardano', symbol: 'ADA', price: 20, priceChange: 0, balance: 0 },
+            { id: 'sol', name: 'Solana', symbol: 'SOL', price: 8000, priceChange: 0, balance: 0 },
+            { id: 'doge', name: 'Dogecoin', symbol: 'DOGE', price: 5, priceChange: 0, balance: 0 },
+            { id: 'dot', name: 'Polkadot', symbol: 'DOT', price: 400, priceChange: 0, balance: 0 },
+            { id: 'ltc', name: 'Litecoin', symbol: 'LTC', price: 5000, priceChange: 0, balance: 0 },
+            { id: 'trx', name: 'TRON', symbol: 'TRX', price: 8, priceChange: 0, balance: 0 }
+        ];
+    }
+
+    // Check if 24 hours have passed
+    const now = Date.now();
+    if (now >= gameState.cryptoMarket.nextPriceUpdate) {
+        updateCryptoPrices24h();
+    }
+}
+
+// Update crypto prices with 24-hour probability logic
+function updateCryptoPrices24h() {
+    const now = Date.now();
+
+    gameState.cryptoMarket.cryptoData.forEach(crypto => {
+        // Main probability: 60% no change, 20% increase, 20% decrease
+        const mainRoll = Math.random();
+
+        let priceChange = 0;
+
+        if (mainRoll < 0.6) {
+            // 60% no change
+            priceChange = 0;
+        } else if (mainRoll < 0.8) {
+            // 20% increase path
+            const increaseRoll = Math.random();
+            if (increaseRoll < 0.5) {
+                // 50% no change
+                priceChange = 0;
+            } else if (increaseRoll < 0.8) {
+                // 30% up to 10%
+                priceChange = Math.random() * 0.10;
+            } else if (increaseRoll < 0.95) {
+                // 15% up to 20%
+                priceChange = Math.random() * 0.20;
+            } else {
+                // 5% up to 30%
+                priceChange = Math.random() * 0.30;
+            }
+        } else {
+            // 20% decrease path
+            const decreaseRoll = Math.random();
+            if (decreaseRoll < 0.5) {
+                // 50% no change
+                priceChange = 0;
+            } else if (decreaseRoll < 0.8) {
+                // 30% down to 10%
+                priceChange = -(Math.random() * 0.10);
+            } else if (decreaseRoll < 0.95) {
+                // 15% down to 20%
+                priceChange = -(Math.random() * 0.20);
+            } else {
+                // 5% down to 30%
+                priceChange = -(Math.random() * 0.30);
+            }
+        }
+
+        // Apply price change
+        const oldPrice = crypto.price;
+        crypto.price = Math.max(0.01, crypto.price * (1 + priceChange));
+        crypto.priceChange = ((crypto.price - oldPrice) / oldPrice) * 100;
+    });
+
+    // Set next update time to 24 hours from now (5 minutes in game time)
+    gameState.cryptoMarket.lastPriceUpdate = now;
+    gameState.cryptoMarket.nextPriceUpdate = now + (5 * 60 * 1000);
+
+    showNotification('Crypto prices have been updated!', 'crypto');
+    updateCryptoUI();
+    saveGame();
+}
+
+// Update crypto timer display
+function updateCryptoTimer() {
+    const timerDisplay = document.getElementById('crypto-timer-display');
+    if (!timerDisplay) return;
+
+    if (!gameState.cryptoMarket || !gameState.cryptoMarket.nextPriceUpdate) {
+        timerDisplay.textContent = '--:--:--';
+        return;
+    }
+
+    const now = Date.now();
+    const timeRemaining = gameState.cryptoMarket.nextPriceUpdate - now;
+
+    if (timeRemaining <= 0) {
+        timerDisplay.textContent = '00:00:00';
+        updateCryptoPrices24h();
+    } else {
+        const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+        const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+        timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+}
+
+// Update crypto UI
+function updateCryptoUI() {
+    const cryptoGrid = document.getElementById('crypto-trading-grid');
+    if (!cryptoGrid) return;
+
+    if (!gameState.cryptoMarket || !gameState.cryptoMarket.cryptoData) {
+        initCryptoMarket();
+    }
+
+    // Calculate total crypto value
+    let totalValue = 0;
+    gameState.cryptoMarket.cryptoData.forEach(crypto => {
+        totalValue += crypto.balance * crypto.price;
+    });
+
+    const totalValueEl = document.getElementById('total-crypto-value');
+    if (totalValueEl) {
+        totalValueEl.textContent = `₱${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    }
+
+    // Update timer
+    updateCryptoTimer();
+
+    // Generate crypto cards
+    cryptoGrid.innerHTML = gameState.cryptoMarket.cryptoData.map(crypto => {
+        const priceChangeClass = crypto.priceChange > 0 ? 'positive' : crypto.priceChange < 0 ? 'negative' : 'neutral';
+        const priceChangeIcon = crypto.priceChange > 0 ? 'fa-arrow-up' : crypto.priceChange < 0 ? 'fa-arrow-down' : 'fa-minus';
+
+        return `
+            <div class="crypto-card">
+                <div class="crypto-card-header">
+                    <div class="crypto-symbol">${crypto.symbol}</div>
+                    <div class="crypto-name">${crypto.name}</div>
+                </div>
+                <div class="crypto-balance">
+                    <i class="fas fa-wallet"></i> Your Balance: <strong>${crypto.balance.toFixed(8)}</strong>
+                </div>
+                <div class="crypto-price-section">
+                    <div class="crypto-price">
+                        <span class="price-label">Current Price:</span>
+                        <span class="price-value">₱${crypto.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div class="crypto-change ${priceChangeClass}">
+                        <i class="fas ${priceChangeIcon}"></i> ${crypto.priceChange.toFixed(2)}%
+                    </div>
+                </div>
+                <div class="crypto-trading-controls">
+                    <input
+                        type="number"
+                        class="crypto-amount-input"
+                        id="crypto-amount-${crypto.id}"
+                        placeholder="Amount"
+                        min="0"
+                        step="0.00000001"
+                    />
+                    <div class="crypto-buttons">
+                        <button class="buy-crypto-btn-new" data-id="${crypto.id}">
+                            <i class="fas fa-shopping-cart"></i> Buy
+                        </button>
+                        <button class="sell-crypto-btn-new" data-id="${crypto.id}">
+                            <i class="fas fa-money-bill-wave"></i> Sell
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Buy crypto
+function buyCryptoNew(cryptoId) {
+    const crypto = gameState.cryptoMarket.cryptoData.find(c => c.id === cryptoId);
+    if (!crypto) return;
+
+    const amountInput = document.getElementById(`crypto-amount-${cryptoId}`);
+    const amount = parseFloat(amountInput.value);
+
+    if (!amount || amount <= 0) {
+        showNotification('Please enter a valid amount!', 'crypto');
+        return;
+    }
+
+    const cost = amount * crypto.price;
+
+    if (gameState.money < cost) {
+        showNotification('Insufficient funds!', 'crypto');
+        return;
+    }
+
+    // Deduct money and add crypto
+    gameState.money -= cost;
+    gameState.inventory.money -= cost;
+    crypto.balance += amount;
+
+    showNotification(`Bought ${amount.toFixed(8)} ${crypto.symbol} for ₱${cost.toLocaleString()}!`, 'crypto');
+    amountInput.value = '';
+    updateUI();
+    saveGame();
+}
+
+// Sell crypto
+function sellCryptoNew(cryptoId) {
+    const crypto = gameState.cryptoMarket.cryptoData.find(c => c.id === cryptoId);
+    if (!crypto) return;
+
+    const amountInput = document.getElementById(`crypto-amount-${cryptoId}`);
+    const amount = parseFloat(amountInput.value);
+
+    if (!amount || amount <= 0) {
+        showNotification('Please enter a valid amount!', 'crypto');
+        return;
+    }
+
+    if (crypto.balance < amount) {
+        showNotification('Insufficient crypto balance!', 'crypto');
+        return;
+    }
+
+    const value = amount * crypto.price;
+
+    // Add money and deduct crypto
+    gameState.money += value;
+    gameState.inventory.money += value;
+    crypto.balance -= amount;
+
+    showNotification(`Sold ${amount.toFixed(8)} ${crypto.symbol} for ₱${value.toLocaleString()}!`, 'crypto');
+    amountInput.value = '';
+    updateUI();
+    saveGame();
 }
 
 // Update business statistics
@@ -3107,8 +3584,27 @@ function loadTriviaGame(container) {
     loadTriviaQuestion();
 }
 
-// Show notification
-function showNotification(message) {
+// Show notification and add to activity log
+function showNotification(message, category = 'general') {
+    // Add to activity log
+    if (!gameState.activityLog) {
+        gameState.activityLog = [];
+    }
+
+    gameState.activityLog.unshift({
+        message: message,
+        category: category,
+        timestamp: Date.now()
+    });
+
+    // Keep only last 100 entries
+    if (gameState.activityLog.length > 100) {
+        gameState.activityLog = gameState.activityLog.slice(0, 100);
+    }
+
+    // Update activity log UI if visible
+    updateActivityLogUI();
+
     // Create notification element
     const notification = document.createElement('div');
     notification.className = 'notification';
@@ -3125,14 +3621,14 @@ function showNotification(message) {
         opacity: 0;
         transition: opacity 0.3s;
     `;
-    
+
     document.body.appendChild(notification);
-    
+
     // Fade in
     setTimeout(() => {
         notification.style.opacity = '1';
     }, 10);
-    
+
     // Remove after delay
     setTimeout(() => {
         notification.style.opacity = '0';
@@ -3140,6 +3636,45 @@ function showNotification(message) {
             document.body.removeChild(notification);
         }, 300);
     }, 3000);
+}
+
+// Update activity log UI
+function updateActivityLogUI() {
+    const activityLogList = document.getElementById('activity-log-list');
+    if (!activityLogList) return;
+
+    if (!gameState.activityLog || gameState.activityLog.length === 0) {
+        activityLogList.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i> No activities yet.</div>';
+        return;
+    }
+
+    activityLogList.innerHTML = gameState.activityLog.map(log => {
+        const date = new Date(log.timestamp);
+        const timeStr = date.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+        const dateStr = date.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+
+        const categoryIcons = {
+            'job': 'fa-briefcase',
+            'business': 'fa-store',
+            'employee': 'fa-users',
+            'marketplace': 'fa-chart-line',
+            'investment': 'fa-piggy-bank',
+            'crypto': 'fa-coins',
+            'general': 'fa-bell'
+        };
+
+        const icon = categoryIcons[log.category] || 'fa-bell';
+
+        return `
+            <div class="activity-log-item">
+                <div class="activity-icon"><i class="fas ${icon}"></i></div>
+                <div class="activity-content">
+                    <p class="activity-message">${log.message}</p>
+                    <p class="activity-time">${dateStr} at ${timeStr}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Update game state periodically - Optimized
