@@ -910,28 +910,38 @@ class PinoyRPG {
     }
 
     updatePlayerStats() {
-        document.getElementById('player-level').textContent = this.player.level;
-        document.getElementById('player-name').textContent = this.player.name;
-        document.getElementById('player-name-mini').textContent = this.player.name;
-        document.getElementById('player-title').textContent = this.player.title;
-        document.getElementById('player-class').textContent = this.player.currentJob.title;
+        const setTextIfExists = (id, text) => {
+            const elem = document.getElementById(id);
+            if (elem) elem.textContent = text;
+        };
+
+        const setStyleIfExists = (id, prop, value) => {
+            const elem = document.getElementById(id);
+            if (elem) elem.style[prop] = value;
+        };
+
+        setTextIfExists('player-level', this.player.level);
+        setTextIfExists('player-name', this.player.name);
+        setTextIfExists('player-name-mini', this.player.name);
+        setTextIfExists('player-title', this.player.title);
+        setTextIfExists('player-class', this.player.currentJob.title);
 
         // Cash (no bar, just display)
-        document.getElementById('current-hp').textContent = '₱' + Math.floor(this.player.financials.cash).toLocaleString();
-        document.getElementById('max-hp').textContent = '';
-        document.getElementById('hp-bar').style.width = '100%';
+        setTextIfExists('current-hp', '₱' + Math.floor(this.player.financials.cash).toLocaleString());
+        setTextIfExists('max-hp', '');
+        setStyleIfExists('hp-bar', 'width', '100%');
 
         // Energy
         const energyPercent = (this.workEnergy / this.maxWorkEnergy) * 100;
-        document.getElementById('mp-bar').style.width = energyPercent + '%';
-        document.getElementById('current-mp').textContent = Math.floor(this.workEnergy);
-        document.getElementById('max-mp').textContent = this.maxWorkEnergy;
+        setStyleIfExists('mp-bar', 'width', energyPercent + '%');
+        setTextIfExists('current-mp', Math.floor(this.workEnergy));
+        setTextIfExists('max-mp', this.maxWorkEnergy);
 
         // XP Progress
         const xpPercent = (this.player.xp / this.player.xpToNextLevel) * 100;
-        document.getElementById('xp-bar').style.width = xpPercent + '%';
-        document.getElementById('current-xp').textContent = Math.floor(this.player.xp);
-        document.getElementById('next-xp').textContent = this.player.xpToNextLevel;
+        setStyleIfExists('xp-bar', 'width', xpPercent + '%');
+        setTextIfExists('current-xp', Math.floor(this.player.xp));
+        setTextIfExists('next-xp', this.player.xpToNextLevel);
     }
 
     updateFinancialDisplay() {

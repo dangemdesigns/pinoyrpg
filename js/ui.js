@@ -49,6 +49,8 @@ class UIController {
     }
 
     renderViewContent(viewName) {
+        if (!game) return;
+
         switch (viewName) {
             case 'jobs':
                 this.renderJobsView();
@@ -76,30 +78,22 @@ class UIController {
     }
 
     updateDashboard() {
-        // Update monthly cashflow display
-        const income = game.player.financials.monthlyIncome;
-        const expenses = game.player.financials.monthlyExpenses;
-        const netCashflow = income - expenses;
+        if (!game) return;
 
-        if (document.getElementById('monthly-income')) {
-            document.getElementById('monthly-income').textContent = '₱' + income.toLocaleString();
+        // Update dashboard stats (times worked, level, net worth)
+        if (document.getElementById('total-work-done')) {
+            document.getElementById('total-work-done').textContent = game.player.totalWorkDone;
         }
-        if (document.getElementById('monthly-expenses')) {
-            document.getElementById('monthly-expenses').textContent = '₱' + expenses.toLocaleString();
+        if (document.getElementById('player-level-stat')) {
+            document.getElementById('player-level-stat').textContent = game.player.level;
         }
-        if (document.getElementById('net-cashflow')) {
-            const elem = document.getElementById('net-cashflow');
-            elem.textContent = '₱' + netCashflow.toLocaleString();
-            elem.style.color = netCashflow >= 0 ? '#2ED573' : '#FF4757';
-        }
-
-        // Update month counter
-        if (document.getElementById('current-month')) {
-            document.getElementById('current-month').textContent = game.gameStats.monthsPlayed;
+        if (document.getElementById('net-worth-stat')) {
+            document.getElementById('net-worth-stat').textContent = '₱' + Math.floor(game.player.financials.totalNetWorth).toLocaleString();
         }
     }
 
     renderJobsView() {
+        if (!game) return;
         const jobsGrid = document.getElementById('jobs-grid');
 
         jobsGrid.innerHTML = game.jobMarket.map(job => {
@@ -132,6 +126,7 @@ class UIController {
     }
 
     renderInvestmentsView() {
+        if (!game) return;
         const investmentsGrid = document.getElementById('investments-grid');
 
         // Update cash display
@@ -162,6 +157,7 @@ class UIController {
     }
 
     renderBusinessView() {
+        if (!game) return;
         const businessGrid = document.getElementById('business-grid');
 
         // Update cash display
@@ -194,6 +190,7 @@ class UIController {
     }
 
     renderEducationView() {
+        if (!game) return;
         const educationGrid = document.getElementById('education-grid');
 
         // Update cash display
@@ -250,6 +247,8 @@ class UIController {
 
     renderInitialUI() {
         // Initial render of all UI components
+        if (!game) return;
+
         game.updateInventoryUI();
         game.updateGoalsUI();
         game.updateStatsUI();
