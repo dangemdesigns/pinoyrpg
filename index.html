@@ -74,57 +74,53 @@
                     <h1 class="page-title">Dashboard</h1>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto;">
-                    <!-- Character Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Character</h2>
-                            <span class="level-badge">Lv <span id="player-level">1</span></span>
-                        </div>
-                        <div class="card-body">
-                            <div style="text-align: center; padding: 10px;">
-                                <div style="font-size: 48px; margin-bottom: 10px;">👨‍💼</div>
-                                <div style="font-weight: 600; margin-bottom: 5px;" id="player-class">Minimum Wage Worker</div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">Click Career → Work to earn money</div>
-                            </div>
-                        </div>
+                <!-- Character Card -->
+                <div class="card" style="max-width: 900px; margin: 0 auto 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">Character</h2>
+                        <span class="level-badge">Lv <span id="player-level">1</span></span>
                     </div>
-
-                    <!-- Stats Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Stats</h2>
-                        </div>
-                        <div class="card-body">
-                            <div style="display: flex; flex-direction: column; gap: 12px;">
-                                <div>
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
-                                        <span>💰 Cash</span>
-                                        <span style="font-weight: 600;">₱<span id="current-hp">0</span></span>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 64px;">👨‍💼</div>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; font-size: 18px; margin-bottom: 5px;" id="player-class">Minimum Wage Worker</div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 15px;">Click Career → Work to earn money</div>
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
+                                            <span>💰 Cash</span>
+                                            <span style="font-weight: 600;">₱<span id="current-hp">0</span></span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
-                                        <span>⚡ Energy</span>
-                                        <span><span id="current-mp">100</span>/<span id="max-mp">100</span></span>
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
+                                            <span>⚡ Energy</span>
+                                            <span><span id="current-mp">100</span>/<span id="max-mp">100</span></span>
+                                        </div>
+                                        <div class="stat-bar" style="height: 8px;">
+                                            <div class="stat-bar-fill mp-bar" id="mp-bar" style="width: 100%"></div>
+                                        </div>
                                     </div>
-                                    <div class="stat-bar" style="height: 8px;">
-                                        <div class="stat-bar-fill mp-bar" id="mp-bar" style="width: 100%"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
-                                        <span>⭐ XP</span>
-                                        <span><span id="current-xp">0</span>/<span id="next-xp">100</span></span>
-                                    </div>
-                                    <div class="stat-bar" style="height: 8px;">
-                                        <div class="stat-bar-fill xp-bar" id="xp-bar" style="width: 0%"></div>
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
+                                            <span>⭐ XP</span>
+                                            <span><span id="current-xp">0</span>/<span id="next-xp">100</span></span>
+                                        </div>
+                                        <div class="stat-bar" style="height: 8px;">
+                                            <div class="stat-bar-fill xp-bar" id="xp-bar" style="width: 0%"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
+                <!-- Progress & Statistics -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px; margin: 0 auto 20px;">
                     <!-- Progress Card -->
                     <div class="card">
                         <div class="card-header">
@@ -137,16 +133,35 @@
                                     <span style="font-weight: 600;" id="total-work-done">0</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--bg-surface); border-radius: 8px;">
-                                    <span style="font-size: 13px;">💰 Net Worth</span>
-                                    <span style="font-weight: 600; color: #2ED573;" id="net-worth-stat">₱0</span>
+                                    <span style="font-size: 13px;">🎯 Goals Achieved</span>
+                                    <span style="font-weight: 600;" id="stat-quests">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Statistics</h2>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--bg-surface); border-radius: 8px;">
+                                    <span style="font-size: 13px;">⏱️ Play Time</span>
+                                    <span style="font-weight: 600;" id="stat-playtime">0m</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--bg-surface); border-radius: 8px;">
+                                    <span style="font-size: 13px;">💵 Total Earned</span>
+                                    <span style="font-weight: 600;" id="stat-gold-earned">₱0</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Skills Info (Tooltip Style) -->
-                <div class="card" style="max-width: 900px; margin: 20px auto;">
+                <!-- Skills Info -->
+                <div class="card" style="max-width: 900px; margin: 0 auto 20px;">
                     <div class="card-header">
                         <h2 class="card-title">Skills</h2>
                     </div>
@@ -185,6 +200,40 @@
                         </div>
                         <div style="margin-top: 15px; padding: 10px; background: var(--bg-surface); border-radius: 8px; font-size: 11px; color: var(--text-secondary); text-align: center;">
                             💡 Skills increase through education and experience
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio / Net Worth -->
+                <div class="card" style="max-width: 900px; margin: 0 auto;">
+                    <div class="card-header">
+                        <h2 class="card-title">💼 Portfolio</h2>
+                    </div>
+                    <div class="card-body">
+                        <div style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                            <div style="text-align: center; margin-bottom: 10px;">
+                                <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Total Net Worth</div>
+                                <div style="font-size: 36px; font-weight: 700; color: #2ED573; margin: 10px 0;" id="portfolio-networth">₱0</div>
+                                <div style="font-size: 11px; color: var(--text-tertiary);" id="portfolio-change">+₱0 (0%) today</div>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
+                            <div style="background: var(--bg-surface); padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 5px;">💰 Cash</div>
+                                <div style="font-size: 16px; font-weight: 600;">₱<span id="portfolio-cash">0</span></div>
+                            </div>
+                            <div style="background: var(--bg-surface); padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 5px;">💎 Savings</div>
+                                <div style="font-size: 16px; font-weight: 600;">₱<span id="portfolio-savings">0</span></div>
+                            </div>
+                            <div style="background: var(--bg-surface); padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 5px;">📈 Investments</div>
+                                <div style="font-size: 16px; font-weight: 600;">₱<span id="portfolio-investments">0</span></div>
+                            </div>
+                            <div style="background: var(--bg-surface); padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 5px;">🏪 Businesses</div>
+                                <div style="font-size: 16px; font-weight: 600;">₱<span id="portfolio-businesses">0</span></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -342,98 +391,50 @@
         </main>
 
         <!-- Right Sidebar (Context/Info) -->
-        <aside class="right-sidebar">
-            <!-- Player Info Widget -->
-            <div class="widget">
+        <aside class="right-sidebar" style="display: flex; flex-direction: column; height: 100vh; overflow: hidden;">
+            <!-- Notifications Widget - 80% height -->
+            <div class="widget" style="flex: 8; display: flex; flex-direction: column; min-height: 0; margin-bottom: 10px;">
                 <div class="widget-header">
-                    <h3 class="widget-title">Profile</h3>
+                    <h3 class="widget-title">Activity Log</h3>
                 </div>
-                <div class="widget-body">
-                    <div class="player-card">
-                        <div class="player-avatar">👨‍💼</div>
-                        <div class="player-info">
-                            <div class="player-name" id="player-name">Juan dela Cruz</div>
-                            <div class="player-title" id="player-title">The Hopeful</div>
-                        </div>
-                        <div class="player-currency">
-                            <span class="currency-icon">💰</span>
-                            <span class="currency-amount" id="gold-display">5000</span>
-                            <span class="currency-label">₱</span>
+                <div class="widget-body" style="flex: 1; overflow-y: auto; min-height: 0;">
+                    <div class="activity-feed" id="activity-feed" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="activity-item">
+                            <span class="activity-icon">🎮</span>
+                            <span class="activity-text">Welcome to your financial journey!</span>
+                            <span class="activity-time">Just now</span>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Quick Stats Widget -->
-            <div class="widget">
-                <div class="widget-header">
-                    <h3 class="widget-title">Statistics</h3>
-                </div>
-                <div class="widget-body">
-                    <div class="quick-stats">
-                        <div class="quick-stat">
-                            <span class="quick-stat-label">Work Sessions</span>
-                            <span class="quick-stat-value" id="stat-kills">0</span>
-                        </div>
-                        <div class="quick-stat">
-                            <span class="quick-stat-label">Goals Achieved</span>
-                            <span class="quick-stat-value" id="stat-quests">0</span>
-                        </div>
-                        <div class="quick-stat">
-                            <span class="quick-stat-label">Play Time</span>
-                            <span class="quick-stat-value" id="stat-playtime">0m</span>
-                        </div>
-                        <div class="quick-stat">
-                            <span class="quick-stat-label">Total Earned</span>
-                            <span class="quick-stat-value" id="stat-gold-earned">₱0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Notifications Widget -->
-            <div class="widget">
-                <div class="widget-header">
-                    <h3 class="widget-title">Notifications</h3>
-                </div>
-                <div class="widget-body">
-                    <div class="notifications-list" id="notifications-list">
-                        <div class="notification">
-                            <span class="notification-icon">🎉</span>
-                            <div class="notification-content">
-                                <div class="notification-text">Welcome to PinoyRPG!</div>
-                                <div class="notification-time">Just now</div>
+                    <div style="margin-top: 15px; border-top: 1px solid var(--bg-surface); padding-top: 10px;">
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">NOTIFICATIONS</div>
+                        <div class="notifications-list" id="notifications-list">
+                            <div class="notification">
+                                <span class="notification-icon">🎉</span>
+                                <div class="notification-content">
+                                    <div class="notification-text">Welcome to PinoyRPG!</div>
+                                    <div class="notification-time">Just now</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tips Widget -->
-            <div class="widget">
+            <!-- Financial Tips Widget - 20% height -->
+            <div class="widget" style="flex: 2; display: flex; flex-direction: column; min-height: 0;">
                 <div class="widget-header">
                     <h3 class="widget-title">Financial Tips</h3>
                 </div>
-                <div class="widget-body">
-                    <div class="tips-content" style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
-                        <p>💡 <strong>Tip:</strong> Build your emergency fund first before investing!</p>
-                        <p>📊 Save regularly and invest your earnings wisely.</p>
-                        <p>🎯 Set clear financial goals and track your progress.</p>
+                <div class="widget-body" style="flex: 1; overflow-y: auto;">
+                    <div class="tips-content" style="font-size: 11px; color: var(--text-secondary); line-height: 1.5;">
+                        <p style="margin: 8px 0;">💡 Build your emergency fund first!</p>
+                        <p style="margin: 8px 0;">📊 Save regularly and invest wisely.</p>
+                        <p style="margin: 8px 0;">🎯 Set clear financial goals.</p>
                     </div>
-                </div>
-            </div>
-
-            <!-- Settings Widget -->
-            <div class="widget">
-                <div class="widget-header">
-                    <h3 class="widget-title">Settings</h3>
-                </div>
-                <div class="widget-body">
-                    <button class="btn-secondary" onclick="if(window.game) game.resetGame()" style="width: 100%; padding: 10px; font-size: 12px;">
-                        🔄 Reset Save Data
-                    </button>
-                    <div style="font-size: 10px; color: var(--text-tertiary); margin-top: 8px; text-align: center;">
-                        Use if you have issues or want to start fresh
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--bg-surface);">
+                        <button class="btn-secondary" onclick="if(window.game) game.resetGame()" style="width: 100%; padding: 8px; font-size: 11px;">
+                            🔄 Reset Save
+                        </button>
                     </div>
                 </div>
             </div>
@@ -525,7 +526,7 @@
             }
         });
     </script>
-    <script src="js/game.js?v=4"></script>
-    <script src="js/ui.js?v=4"></script>
+    <script src="js/game.js?v=5"></script>
+    <script src="js/ui.js?v=5"></script>
 </body>
 </html>

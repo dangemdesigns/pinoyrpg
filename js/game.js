@@ -1114,9 +1114,6 @@ class PinoyRPG {
     }
 
     updateStatsUI() {
-        if (document.getElementById('stat-kills')) {
-            document.getElementById('stat-kills').textContent = this.gameStats.totalWorkActions;
-        }
         if (document.getElementById('stat-quests')) {
             document.getElementById('stat-quests').textContent = this.gameStats.goalsAchieved;
         }
@@ -1132,12 +1129,41 @@ class PinoyRPG {
         if (document.getElementById('total-work-done')) {
             document.getElementById('total-work-done').textContent = this.player.totalWorkDone;
         }
-        if (document.getElementById('player-level-stat')) {
-            document.getElementById('player-level-stat').textContent = this.player.level;
-        }
-        if (document.getElementById('net-worth-stat')) {
-            document.getElementById('net-worth-stat').textContent = '₱' + Math.floor(this.player.financials.totalNetWorth).toLocaleString();
-        }
+
+        // Update portfolio
+        this.updatePortfolio();
+    }
+
+    updatePortfolio() {
+        // Calculate individual portfolio values
+        let investmentsValue = 0;
+        this.investments.forEach(inv => {
+            investmentsValue += inv.amount || 0;
+        });
+
+        let businessesValue = 0;
+        this.businesses.forEach(bus => {
+            businessesValue += (bus.initialCost * 0.8) || 0;
+        });
+
+        // Update portfolio displays
+        const setTextIfExists = (id, text) => {
+            const elem = document.getElementById(id);
+            if (elem) elem.textContent = text;
+        };
+
+        setTextIfExists('portfolio-networth', '₱' + Math.floor(this.player.financials.totalNetWorth).toLocaleString());
+        setTextIfExists('portfolio-cash', Math.floor(this.player.financials.cash).toLocaleString());
+        setTextIfExists('portfolio-savings', Math.floor(this.player.financials.savings).toLocaleString());
+        setTextIfExists('portfolio-investments', Math.floor(investmentsValue).toLocaleString());
+        setTextIfExists('portfolio-businesses', Math.floor(businessesValue).toLocaleString());
+
+        // Calculate today's change (simplified - just show total earned)
+        const changeAmount = this.player.financials.totalEarned || 0;
+        const changePercent = this.player.financials.totalNetWorth > 0
+            ? ((changeAmount / this.player.financials.totalNetWorth) * 100).toFixed(1)
+            : 0;
+        setTextIfExists('portfolio-change', `+₱${changeAmount.toLocaleString()} (${changePercent}%) lifetime`);
     }
 
     addActivityLog(message, icon = '📝') {
