@@ -68,7 +68,8 @@ class PinoyRPG {
                 savings: 0,
                 emergencyFund: 0,
                 totalNetWorth: 0,
-                totalEarned: 0
+                totalEarned: 0,
+                debt: 0
             },
             attributes: {
                 financialLiteracy: 1,
@@ -825,22 +826,22 @@ class PinoyRPG {
     }
 
     calculateNetWorth() {
-        let netWorth = this.player.financials.cash;
-        netWorth += this.player.financials.savings;
-        netWorth += this.player.financials.emergencyFund;
+        let netWorth = this.player.financials.cash || 0;
+        netWorth += this.player.financials.savings || 0;
+        netWorth += this.player.financials.emergencyFund || 0;
 
         // Add investment values
         this.investments.forEach(inv => {
-            netWorth += inv.amount;
+            netWorth += inv.amount || 0;
         });
 
         // Add business values (conservative estimate)
         this.businesses.forEach(bus => {
-            netWorth += bus.initialCost * 0.8; // Depreciated value
+            netWorth += (bus.initialCost * 0.8) || 0; // Depreciated value
         });
 
-        // Subtract debt
-        netWorth -= this.player.financials.debt;
+        // Subtract debt (if any)
+        netWorth -= this.player.financials.debt || 0;
 
         this.player.financials.totalNetWorth = Math.floor(netWorth);
 
@@ -1209,26 +1210,67 @@ class PinoyRPG {
 
     loadGame() {
         const saveData = localStorage.getItem('pinoyrpg_save');
+        const saveVersion = localStorage.getItem('pinoyrpg_version');
+        const currentVersion = '2.0'; // Action-based version
 
         if (saveData) {
             try {
+                // Check if save is from old version (time-based)
+                if (!saveVersion || saveVersion !== currentVersion) {
+                    console.log('🔄 Old save detected. Clearing for new version...');
+                    localStorage.removeItem('pinoyrpg_save');
+                    localStorage.setItem('pinoyrpg_version', currentVersion);
+                    this.addNotification('Save data reset for new version!', 'ℹ️');
+                    return;
+                }
+
                 const data = JSON.parse(saveData);
-                this.player = data.player || this.player;
+
+                // Validate and migrate player data
+                if (data.player) {
+                    this.player = data.player;
+
+                    // Ensure all required financial properties exist
+                    this.player.financials = this.player.financials || {};
+                    this.player.financials.cash = this.player.financials.cash || 0;
+                    this.player.financials.savings = this.player.financials.savings || 0;
+                    this.player.financials.emergencyFund = this.player.financials.emergencyFund || 0;
+                    this.player.financials.totalNetWorth = this.player.financials.totalNetWorth || 0;
+                    this.player.financials.totalEarned = this.player.financials.totalEarned || 0;
+                    this.player.financials.debt = this.player.financials.debt || 0;
+
+                    // Ensure player progression properties exist
+                    this.player.totalWorkDone = this.player.totalWorkDone || 0;
+                    this.player.level = this.player.level || 1;
+                    this.player.xp = this.player.xp || 0;
+                    this.player.xpToNextLevel = this.player.xpToNextLevel || 100;
+                }
+
                 this.investments = data.investments || this.investments;
                 this.businesses = data.businesses || this.businesses;
                 this.goals = data.goals || this.goals;
                 this.barangay = data.barangay || this.barangay;
                 this.gameStats = data.gameStats || this.gameStats;
+
+                console.log('✅ Save data loaded successfully!');
             } catch (e) {
-                console.error('Failed to load save data:', e);
+                console.error('❌ Failed to load save data:', e);
+                console.log('🔄 Resetting to prevent errors...');
+                localStorage.removeItem('pinoyrpg_save');
+                this.addNotification('Save corrupted. Starting fresh!', '⚠️');
             }
+        } else {
+            // First time playing, set version
+            localStorage.setItem('pinoyrpg_version', currentVersion);
         }
     }
 
     resetGame() {
         if (confirm('Are you sure you want to reset your progress? This cannot be undone!')) {
             localStorage.removeItem('pinoyrpg_save');
-            location.reload();
+            localStorage.removeItem('pinoyrpg_version');
+            this.addNotification('Game reset! Reloading...', '🔄');
+            setTimeout(() => location.reload(), 1000);
         }
     }
 
