@@ -1155,11 +1155,17 @@ body {
 }
 
 @media (max-width: 1200px) {
+    html, body {
+        overflow: visible;
+        height: auto;
+        min-height: 100%;
+    }
+
     .app-container {
         flex-wrap: wrap;
         height: auto;
         min-height: 100vh;
-        overflow-y: auto;
+        overflow-y: visible;
     }
 
     .left-sidebar {
@@ -1195,6 +1201,11 @@ body {
 @media (max-width: 768px) {
     :root {
         --sidebar-left-width: 60px;
+    }
+
+    html, body {
+        overflow: visible;
+        height: auto;
     }
 
     .nav-text,
