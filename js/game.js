@@ -1239,6 +1239,18 @@ class PinoyRPG {
 // Initialize game when page loads
 let game;
 window.addEventListener('DOMContentLoaded', () => {
-    game = new PinoyRPG();
-    window.game = game;
+    try {
+        game = new PinoyRPG();
+        window.game = game;
+
+        // Enable the WORK button once game is loaded
+        const workBtn = document.getElementById('work-btn');
+        if (workBtn) {
+            workBtn.disabled = false;
+        }
+
+        console.log('✅ PinoyRPG initialized successfully!');
+    } catch (error) {
+        console.error('❌ Failed to initialize PinoyRPG:', error);
+    }
 });

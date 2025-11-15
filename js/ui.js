@@ -275,19 +275,26 @@ class UIController {
 
 // Initialize UI Controller when DOM is ready
 let ui;
-window.addEventListener('DOMContentLoaded', () => {
-    // Wait for game to initialize first
-    setTimeout(() => {
-        ui = new UIController();
-        window.ui = ui; // Make UI globally accessible
+function initUI() {
+    if (typeof game === 'undefined' || !game) {
+        // Game not ready yet, wait and try again
+        setTimeout(initUI, 50);
+        return;
+    }
 
-        // Update UI every second
-        setInterval(() => {
-            if (ui.currentView === 'dashboard') {
-                ui.updateDashboard();
-            }
-        }, 1000);
-    }, 100);
+    ui = new UIController();
+    window.ui = ui; // Make UI globally accessible
+
+    // Update UI every second
+    setInterval(() => {
+        if (ui && ui.currentView === 'dashboard') {
+            ui.updateDashboard();
+        }
+    }, 1000);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    initUI();
 });
 
 // Keyboard shortcuts
