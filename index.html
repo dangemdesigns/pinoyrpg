@@ -71,125 +71,120 @@
             <!-- Dashboard View -->
             <div class="view active" id="dashboard-view">
                 <div class="content-header">
-                    <h1 class="page-title">Financial Dashboard</h1>
-                    <div class="header-actions">
-                        <button id="work-btn" class="btn-primary" onclick="if(window.game) game.doWork()" style="font-size: 18px; padding: 15px 40px;" disabled>
-                            💼 WORK
-                        </button>
+                    <h1 class="page-title">Dashboard</h1>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto;">
+                    <!-- Character Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Character</h2>
+                            <span class="level-badge">Lv <span id="player-level">1</span></span>
+                        </div>
+                        <div class="card-body">
+                            <div style="text-align: center; padding: 10px;">
+                                <div style="font-size: 48px; margin-bottom: 10px;">👨‍💼</div>
+                                <div style="font-weight: 600; margin-bottom: 5px;" id="player-class">Minimum Wage Worker</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">Click Career → Work to earn money</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Stats</h2>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
+                                        <span>💰 Cash</span>
+                                        <span style="font-weight: 600;">₱<span id="current-hp">0</span></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
+                                        <span>⚡ Energy</span>
+                                        <span><span id="current-mp">100</span>/<span id="max-mp">100</span></span>
+                                    </div>
+                                    <div class="stat-bar" style="height: 8px;">
+                                        <div class="stat-bar-fill mp-bar" id="mp-bar" style="width: 100%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
+                                        <span>⭐ XP</span>
+                                        <span><span id="current-xp">0</span>/<span id="next-xp">100</span></span>
+                                    </div>
+                                    <div class="stat-bar" style="height: 8px;">
+                                        <div class="stat-bar-fill xp-bar" id="xp-bar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Progress</h2>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--bg-surface); border-radius: 8px;">
+                                    <span style="font-size: 13px;">💼 Times Worked</span>
+                                    <span style="font-weight: 600;" id="total-work-done">0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--bg-surface); border-radius: 8px;">
+                                    <span style="font-size: 13px;">💰 Net Worth</span>
+                                    <span style="font-weight: 600; color: #2ED573;" id="net-worth-stat">₱0</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="content-grid">
-                    <!-- Financial Overview Card -->
-                    <div class="card card-full">
-                        <div class="card-header">
-                            <h2 class="card-title">Your Journey</h2>
-                            <span class="level-badge">Level <span id="player-level">1</span></span>
-                        </div>
-                        <div class="card-body">
-                            <div class="character-overview">
-                                <div class="character-avatar-large">
-                                    <span class="avatar-icon">👨‍💼</span>
-                                    <div class="character-class" id="player-class">Minimum Wage Worker</div>
-                                </div>
-                                <div class="stats-grid">
-                                    <div class="stat-item">
-                                        <div class="stat-label">💰 CASH</div>
-                                        <div class="stat-bar">
-                                            <div class="stat-bar-fill hp-bar" id="hp-bar" style="width: 0%"></div>
-                                        </div>
-                                        <div class="stat-value">₱<span id="current-hp">0</span></div>
-                                    </div>
-                                    <div class="stat-item">
-                                        <div class="stat-label">⚡ ENERGY</div>
-                                        <div class="stat-bar">
-                                            <div class="stat-bar-fill mp-bar" id="mp-bar" style="width: 100%"></div>
-                                        </div>
-                                        <div class="stat-value"><span id="current-mp">100</span> / <span id="max-mp">100</span></div>
-                                    </div>
-                                    <div class="stat-item">
-                                        <div class="stat-label">⭐ XP</div>
-                                        <div class="stat-bar">
-                                            <div class="stat-bar-fill xp-bar" id="xp-bar" style="width: 0%"></div>
-                                        </div>
-                                        <div class="stat-value"><span id="current-xp">0</span> / <span id="next-xp">100</span></div>
-                                    </div>
-                                </div>
-                                <div class="attributes-grid">
-                                    <div class="attribute">
-                                        <span class="attr-icon">📚</span>
-                                        <span class="attr-label">Financial Literacy</span>
-                                        <span class="attr-value" id="attr-str">1</span>
-                                    </div>
-                                    <div class="attribute">
-                                        <span class="attr-icon">💼</span>
-                                        <span class="attr-label">Work Ethic</span>
-                                        <span class="attr-value" id="attr-dex">5</span>
-                                    </div>
-                                    <div class="attribute">
-                                        <span class="attr-icon">🏪</span>
-                                        <span class="attr-label">Entrepreneurship</span>
-                                        <span class="attr-value" id="attr-con">1</span>
-                                    </div>
-                                    <div class="attribute">
-                                        <span class="attr-icon">🤝</span>
-                                        <span class="attr-label">Networking</span>
-                                        <span class="attr-value" id="attr-int">3</span>
-                                    </div>
-                                    <div class="attribute">
-                                        <span class="attr-icon">⚖️</span>
-                                        <span class="attr-label">Discipline</span>
-                                        <span class="attr-value" id="attr-wis">5</span>
-                                    </div>
-                                    <div class="attribute">
-                                        <span class="attr-icon">💪</span>
-                                        <span class="attr-label">Resilience</span>
-                                        <span class="attr-value" id="attr-cha">5</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Skills Info (Tooltip Style) -->
+                <div class="card" style="max-width: 900px; margin: 20px auto;">
+                    <div class="card-header">
+                        <h2 class="card-title">Skills</h2>
                     </div>
-
-                    <!-- Recent Activity -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Recent Activity</h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="activity-feed" id="activity-feed">
-                                <div class="activity-item">
-                                    <span class="activity-icon">🎮</span>
-                                    <span class="activity-text">Welcome to your financial journey!</span>
-                                    <span class="activity-time">Just now</span>
-                                </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; font-size: 12px;">
+                            <div class="attribute" title="Increases investment returns & unlocks better financial opportunities">
+                                <span class="attr-icon">📚</span>
+                                <span class="attr-label">Fin. Literacy</span>
+                                <span class="attr-value" id="attr-str">1</span>
+                            </div>
+                            <div class="attribute" title="Increases earnings from work">
+                                <span class="attr-icon">💼</span>
+                                <span class="attr-label">Work Ethic</span>
+                                <span class="attr-value" id="attr-dex">5</span>
+                            </div>
+                            <div class="attribute" title="Required for starting businesses">
+                                <span class="attr-icon">🏪</span>
+                                <span class="attr-label">Entrepreneur</span>
+                                <span class="attr-value" id="attr-con">1</span>
+                            </div>
+                            <div class="attribute" title="Unlocks better job opportunities">
+                                <span class="attr-icon">🤝</span>
+                                <span class="attr-label">Networking</span>
+                                <span class="attr-value" id="attr-int">3</span>
+                            </div>
+                            <div class="attribute" title="Improves saving habits & reduces waste">
+                                <span class="attr-icon">⚖️</span>
+                                <span class="attr-label">Discipline</span>
+                                <span class="attr-value" id="attr-wis">5</span>
+                            </div>
+                            <div class="attribute" title="Helps recover from financial setbacks">
+                                <span class="attr-icon">💪</span>
+                                <span class="attr-label">Resilience</span>
+                                <span class="attr-value" id="attr-cha">5</span>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Game Progress -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Your Progress</h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="barangay-stats">
-                                <div class="barangay-stat">
-                                    <span class="stat-icon">💼</span>
-                                    <span class="stat-label">Times Worked</span>
-                                    <span class="stat-value" id="total-work-done">0</span>
-                                </div>
-                                <div class="barangay-stat">
-                                    <span class="stat-icon">📊</span>
-                                    <span class="stat-label">Level</span>
-                                    <span class="stat-value" id="player-level-stat">1</span>
-                                </div>
-                                <div class="barangay-stat">
-                                    <span class="stat-icon">💰</span>
-                                    <span class="stat-label">Net Worth</span>
-                                    <span class="stat-value" id="net-worth-stat" style="color: #2ED573">₱0</span>
-                                </div>
-                            </div>
+                        <div style="margin-top: 15px; padding: 10px; background: var(--bg-surface); border-radius: 8px; font-size: 11px; color: var(--text-secondary); text-align: center;">
+                            💡 Skills increase through education and experience
                         </div>
                     </div>
                 </div>
@@ -200,6 +195,23 @@
                 <div class="content-header">
                     <h1 class="page-title">Career Opportunities</h1>
                 </div>
+
+                <!-- Work Action Card -->
+                <div class="card" style="max-width: 600px; margin: 0 auto 30px;">
+                    <div class="card-header">
+                        <h2 class="card-title">💼 Work</h2>
+                    </div>
+                    <div class="card-body" style="text-align: center;">
+                        <p style="margin-bottom: 15px; color: var(--text-secondary);">Click to start working at your current job. Takes 60 seconds, costs 10 energy.</p>
+                        <button id="work-btn" class="btn-primary" onclick="if(window.game) game.doWork()" style="font-size: 18px; padding: 15px 50px; width: 100%; max-width: 300px;" disabled>
+                            💼 WORK
+                        </button>
+                        <div id="work-progress-bar" style="display: none; margin-top: 15px; background: var(--bg-surface); border-radius: 10px; overflow: hidden; height: 30px;">
+                            <div id="work-progress-fill" style="height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); width: 0%; transition: width 0.1s linear;"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="content-grid">
                     <div class="card card-full">
                         <div class="card-header">
@@ -424,25 +436,25 @@
                     <p><strong>🎯 Your Goal:</strong> Achieve financial freedom by building wealth and passive income!</p>
 
                     <div style="background: var(--bg-elevated); padding: 20px; border-radius: 10px; margin: 20px 0;">
-                        <h3 style="color: var(--accent-primary); margin-bottom: 15px;">💰 How to Play (It's Easy!):</h3>
+                        <h3 style="color: var(--accent-primary); margin-bottom: 15px;">💰 How to Play:</h3>
                         <ol style="padding-left: 20px;">
-                            <li style="margin-bottom: 12px;"><strong>Click WORK to Earn Money</strong><br>Uses 10 energy, earns cash. Energy regens 1/second!</li>
-                            <li style="margin-bottom: 12px;"><strong>Get Better Jobs</strong><br>Higher paying jobs = more money per click!</li>
+                            <li style="margin-bottom: 12px;"><strong>Go to Career → Click WORK</strong><br>Takes 60 seconds, costs 10 energy, earns cash!</li>
+                            <li style="margin-bottom: 12px;"><strong>Get Better Jobs</strong><br>Higher paying jobs = more money per work!</li>
                             <li style="margin-bottom: 12px;"><strong>Start Businesses</strong><br>Earn passive income every time you work!</li>
-                            <li style="margin-bottom: 12px;"><strong>Level Up & Get Stronger</strong><br>Gain XP from working, level up for more energy!</li>
+                            <li style="margin-bottom: 12px;"><strong>Level Up & Grow</strong><br>Gain XP from working, unlock more opportunities!</li>
                         </ol>
                     </div>
 
                     <div style="background: var(--bg-surface-hover); padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid var(--accent-primary);">
-                        <p><strong>💡 Quick Start Guide:</strong></p>
-                        <p>1️⃣ Click the big <strong>"WORK"</strong> button to earn money<br>
-                        2️⃣ Click <strong>"Career"</strong> → Get a better paying job<br>
-                        3️⃣ Keep clicking WORK to earn more cash<br>
-                        4️⃣ Click <strong>"Business"</strong> → Buy a Sari-Sari Store for passive income!</p>
+                        <p><strong>💡 Quick Start:</strong></p>
+                        <p>1️⃣ Close this tutorial<br>
+                        2️⃣ Click <strong>"Career"</strong> in the left menu<br>
+                        3️⃣ Click <strong>"WORK"</strong> and wait 60 seconds<br>
+                        4️⃣ Earn money, level up, and unlock new opportunities!</p>
                     </div>
 
                     <p style="text-align: center; font-size: 14px; color: var(--text-secondary); margin-top: 20px;">
-                        ⚡ Energy regenerates automatically (1 per second)<br>
+                        ⚡ Energy regenerates 1/second | ⏱️ Each work takes 60 seconds<br>
                         ⌨️ Press ESC anytime to return to Dashboard
                     </p>
                 </div>
@@ -463,7 +475,7 @@
             <button class="guidance-close" onclick="toggleGuidance()">×</button>
         </div>
         <div class="guidance-body" id="guidance-text">
-            Click the WORK button to start earning money!
+            Go to Career → Click WORK to start earning!
         </div>
         <div class="guidance-progress">
             <div class="guidance-progress-bar" id="guidance-progress"></div>
@@ -498,7 +510,7 @@
             }
         });
     </script>
-    <script src="js/game.js?v=2"></script>
-    <script src="js/ui.js?v=2"></script>
+    <script src="js/game.js?v=3"></script>
+    <script src="js/ui.js?v=3"></script>
 </body>
 </html>

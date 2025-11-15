@@ -34,6 +34,11 @@ class PinoyRPG {
         this.maxWorkEnergy = 100;
         this.energyRegenRate = 1; // energy per second
 
+        // Work progress
+        this.isWorking = false;
+        this.workProgress = 0;
+        this.workDuration = 60; // seconds
+
         this.init();
     }
 
@@ -86,13 +91,41 @@ class PinoyRPG {
     doWork() {
         const energyCost = 10;
 
+        // Check if already working
+        if (this.isWorking) {
+            this.addNotification('Already working! Please wait...', '⚠️');
+            return;
+        }
+
         if (this.workEnergy < energyCost) {
             this.addNotification('Not enough energy! Wait for it to regenerate.', '⚠️');
             return;
         }
 
+        // Start working
+        this.isWorking = true;
         this.workEnergy -= energyCost;
+        this.workProgress = 0;
 
+        // Update work button UI
+        this.updateWorkButton();
+
+        // Progress timer
+        const startTime = Date.now();
+        const workInterval = setInterval(() => {
+            const elapsed = (Date.now() - startTime) / 1000;
+            this.workProgress = Math.min((elapsed / this.workDuration) * 100, 100);
+
+            this.updateWorkButton();
+
+            if (elapsed >= this.workDuration) {
+                clearInterval(workInterval);
+                this.completeWork();
+            }
+        }, 100); // Update every 100ms for smooth progress
+    }
+
+    completeWork() {
         // Calculate earnings based on job
         const baseEarnings = this.player.currentJob.monthlySalary / 30; // Daily rate
         const bonus = Math.random() * 0.3; // 0-30% bonus
@@ -107,6 +140,7 @@ class PinoyRPG {
         this.gainXP(5);
 
         this.addActivityLog(`Worked and earned ₱${earnings.toLocaleString()}!`, '💼');
+        this.addNotification(`Earned ₱${earnings.toLocaleString()}!`, '💰');
 
         // Check for work achievements
         if (this.player.totalWorkDone === 10) {
@@ -116,13 +150,38 @@ class PinoyRPG {
             this.showAchievement('Dedicated! 100 work sessions', '🏆');
         }
 
+        // Passive income from businesses
+        this.earnPassiveIncome();
+
+        // Reset working state
+        this.isWorking = false;
+        this.workProgress = 0;
+
         this.updateUI();
         this.updateGuidance();
         this.calculateNetWorth();
         this.checkGoalsProgress();
+        this.updateWorkButton();
+    }
 
-        // Passive income from businesses
-        this.earnPassiveIncome();
+    updateWorkButton() {
+        const btn = document.getElementById('work-btn');
+        const progressBar = document.getElementById('work-progress-bar');
+        const progressFill = document.getElementById('work-progress-fill');
+
+        if (!btn) return;
+
+        if (this.isWorking) {
+            btn.disabled = true;
+            btn.innerHTML = `💼 WORKING... ${Math.floor(this.workProgress)}%`;
+            if (progressBar) progressBar.style.display = 'block';
+            if (progressFill) progressFill.style.width = this.workProgress + '%';
+        } else {
+            btn.disabled = this.workEnergy < 10;
+            btn.innerHTML = '💼 WORK';
+            if (progressBar) progressBar.style.display = 'none';
+            if (progressFill) progressFill.style.width = '0%';
+        }
     }
 
     startEnergyRegen() {
@@ -1185,10 +1244,10 @@ class PinoyRPG {
 
         // Smart guidance based on player progress (action-based)
         if (this.player.totalWorkDone === 0) {
-            message = '💼 Click the <strong>WORK</strong> button to start earning money!';
+            message = '💼 Go to <strong>Career</strong> → Click <strong>WORK</strong> to start earning money!';
             progressPercent = 0;
         } else if (this.player.totalWorkDone < 5) {
-            message = '💪 Keep working! Energy regenerates automatically. Work more to earn cash!';
+            message = '💪 Keep working in the Career page! Each work takes 60 seconds.';
             progressPercent = 5;
         } else if (this.player.currentJob.title === 'Minimum Wage Worker' && this.player.financials.cash >= 1000) {
             message = '💼 Get a better job! Click <strong>Career</strong> and apply for Call Center Agent (₱25k/month)';
