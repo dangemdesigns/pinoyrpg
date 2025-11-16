@@ -1397,25 +1397,25 @@ class PinoyRPG {
     }
 
     addNotification(message, icon = '📢') {
-        const list = document.getElementById('notifications-list');
-        if (!list) return;
+        // Notifications now go to activity feed (combined with activity log)
+        const feed = document.getElementById('activity-feed');
+        if (!feed) return;
 
         const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-        const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.innerHTML = `
-            <span class="notification-icon">${icon}</span>
-            <div class="notification-content">
-                <div class="notification-text">${message}</div>
-                <div class="notification-time">${time}</div>
-            </div>
+        const activity = document.createElement('div');
+        activity.className = 'activity-item';
+        activity.innerHTML = `
+            <span class="activity-icon">${icon}</span>
+            <span class="activity-text">${message}</span>
+            <span class="activity-time">${time}</span>
         `;
 
-        list.insertBefore(notification, list.firstChild);
+        feed.insertBefore(activity, feed.firstChild);
 
-        while (list.children.length > 5) {
-            list.removeChild(list.lastChild);
+        // Keep only last 50 items
+        while (feed.children.length > 50) {
+            feed.removeChild(feed.lastChild);
         }
     }
 
