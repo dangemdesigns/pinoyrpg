@@ -1155,8 +1155,45 @@ body {
 }
 
 @media (max-width: 1200px) {
+    html, body {
+        overflow: visible;
+        height: auto;
+        min-height: 100%;
+    }
+
+    .app-container {
+        flex-wrap: wrap;
+        height: auto;
+        min-height: 100vh;
+        overflow-y: visible;
+    }
+
+    .left-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
+        overflow-y: auto;
+    }
+
+    .main-content {
+        order: 2;
+        flex: 1;
+        min-width: 0;
+        height: auto;
+        overflow-y: visible;
+        margin-left: var(--sidebar-left-width);
+    }
+
     .right-sidebar {
-        display: none;
+        order: 3;
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        max-height: 400px;
+        height: auto;
+        margin-left: var(--sidebar-left-width);
     }
 
     .content-grid {
@@ -1169,6 +1206,20 @@ body {
         --sidebar-left-width: 60px;
     }
 
+    html, body {
+        overflow: visible;
+        height: auto;
+    }
+
+    .left-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
+        overflow-y: auto;
+    }
+
     .nav-text,
     .logo-text {
         display: none;
@@ -1176,6 +1227,16 @@ body {
 
     .main-content {
         padding: var(--spacing-md);
+        width: calc(100% - 60px);
+        margin-left: 60px;
+        overflow-y: visible;
+    }
+
+    .right-sidebar {
+        width: calc(100% - 60px);
+        margin-left: 60px;
+        padding: var(--spacing-md);
+        max-height: 300px;
     }
 
     .page-title {

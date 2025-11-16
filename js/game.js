@@ -33,6 +33,10 @@ class PinoyRPG {
         this.emergencyFundRequired = 5000;
         this.hasEmergencyFund = false;
 
+        // Business Emergency Fund Requirement
+        this.businessEmergencyFundRequired = 30000;
+        this.hasBusinessEmergencyFund = false;
+
         // Random Event System
         this.lastEventTime = Date.now();
         this.eventCooldown = 600000; // 10 minutes minimum between events
@@ -52,6 +56,10 @@ class PinoyRPG {
 
     init() {
         this.loadGame();
+        this.initCryptoMarket();
+        // Recalculate emergency fund statuses after loading
+        this.checkEmergencyFundStatus();
+        this.checkBusinessEmergencyFundStatus();
         this.updateUI();
         this.initializeGoals();
         this.updateGuidance();
@@ -149,19 +157,14 @@ class PinoyRPG {
             return;
         }
 
-        // Don't trigger too early - player needs experience first
-        if (this.player.totalWorkDone < 20) {
-            return;
-        }
-
         // Check cooldown
         const timeSinceLastEvent = Date.now() - this.lastEventTime;
         if (timeSinceLastEvent < this.eventCooldown) {
             return;
         }
 
-        // Random chance (5% every check - reduced from 10%)
-        if (Math.random() > 0.05) {
+        // Random chance (10% every check)
+        if (Math.random() > 0.1) {
             return;
         }
 
@@ -209,7 +212,18 @@ class PinoyRPG {
 
     checkEmergencyFundStatus() {
         const wasReady = this.hasEmergencyFund;
-        this.hasEmergencyFund = this.player.financials.emergencyFund >= this.emergencyFundRequired;
+
+        // Calculate total emergency fund (includes active savings investments)
+        let totalEmergencyFund = 0;
+
+        // Add active interest investments (savings account, digital bank, time deposits, pag-ibig)
+        if (this.activeInvestments && this.activeInvestments.length > 0) {
+            totalEmergencyFund += this.activeInvestments
+                .filter(inv => inv.type === 'interest')
+                .reduce((sum, inv) => sum + inv.principal, 0);
+        }
+
+        this.hasEmergencyFund = totalEmergencyFund >= this.emergencyFundRequired;
 
         // Notify if status changed
         if (wasReady && !this.hasEmergencyFund) {
@@ -219,14 +233,27 @@ class PinoyRPG {
         }
     }
 
+    checkBusinessEmergencyFundStatus() {
+        const wasReady = this.hasBusinessEmergencyFund;
+        // Business emergency fund = cash reserves
+        this.hasBusinessEmergencyFund = this.player.financials.cash >= this.businessEmergencyFundRequired;
+
+        // Notify if status changed
+        if (wasReady && !this.hasBusinessEmergencyFund) {
+            this.addNotification('⚠️ Cash below ₱30,000! Business opportunities locked.', '🚨');
+        } else if (!wasReady && this.hasBusinessEmergencyFund) {
+            this.addNotification('✅ You have ₱30,000 cash! Business opportunities unlocked.', '🎉');
+        }
+    }
+
     createPlayer() {
         return {
             name: 'Juan dela Cruz',
             age: 22,
             education: 'High School Graduate',
             currentJob: {
-                title: 'Minimum Wage Worker',
-                monthlySalary: 15000,
+                title: 'Informal Sector Worker',
+                monthlySalary: 10000,
                 experience: 0,
                 skills: []
             },
@@ -303,6 +330,15 @@ class PinoyRPG {
         this.player.financials.totalEarned += earnings;
         this.player.totalWorkDone++;
         this.gameStats.totalWorkActions++;
+
+        // Check business emergency fund status when cash changes
+        this.checkBusinessEmergencyFundStatus();
+
+        // Track work experience (every 10 work sessions = 1 month of experience)
+        if (this.player.totalWorkDone % 10 === 0) {
+            this.player.currentJob.experience++;
+            this.addNotification(`Gained 1 month of work experience! Total: ${this.player.currentJob.experience} months`, '📚');
+        }
 
         // Gain XP
         this.gainXP(5);
@@ -391,6 +427,14 @@ class PinoyRPG {
     createJobMarket() {
         return [
             {
+                id: 'informal-sector',
+                title: 'Informal Sector Worker',
+                salary: 10000,
+                requirements: { education: 'None', experience: 0 },
+                description: 'Laborer, tindera, helper - no formal employment',
+                growth: 'Limited'
+            },
+            {
                 id: 'minimum-wage',
                 title: 'Minimum Wage Worker',
                 salary: 15000,
@@ -470,23 +514,23 @@ class PinoyRPG {
     createInvestmentOptions() {
         return [
             {
-                id: 'piggy-bank',
-                name: 'Piggy Bank (Emergency Fund)',
-                minInvestment: 100,
-                expectedReturn: 0,
-                risk: 'None',
-                description: 'Safe storage for emergency fund. No interest, just protection.',
-                icon: '🐷',
-                liquidity: 'High'
-            },
-            {
                 id: 'savings-account',
                 name: 'Savings Account',
                 minInvestment: 100,
                 expectedReturn: 0.25,
                 risk: 'Very Low',
-                description: 'Bank savings, very low returns but safe',
+                description: 'Traditional bank savings, very low returns but safe',
                 icon: '🏦',
+                liquidity: 'High'
+            },
+            {
+                id: 'digital-bank',
+                name: 'Digital Banking',
+                minInvestment: 1000,
+                expectedReturn: 4.0,
+                risk: 'Very Low',
+                description: 'Online banking with better interest rates',
+                icon: '📱',
                 liquidity: 'High'
             },
             {
@@ -889,9 +933,9 @@ class PinoyRPG {
         const option = this.investmentOptions.find(opt => opt.id === investmentId);
         if (!option) return;
 
-        // Check emergency fund requirement (except for Piggy Bank and Savings Account)
-        if (investmentId !== 'piggy-bank' && investmentId !== 'savings-account' && !this.hasEmergencyFund) {
-            this.addNotification('🚨 Build ₱5,000 emergency fund first! Use Piggy Bank.', '⚠️');
+        // Check emergency fund requirement (except for Savings Account and Digital Bank)
+        if (investmentId !== 'savings-account' && investmentId !== 'digital-bank' && !this.hasEmergencyFund) {
+            this.addNotification('🚨 Build ₱5,000 emergency fund first! Invest in Savings Account or Digital Bank.', '⚠️');
             return;
         }
 
@@ -905,21 +949,29 @@ class PinoyRPG {
             return;
         }
 
-        this.player.financials.cash -= amount;
+        // Check if this investment type should create an active investment with progress bar
+        if (investmentId === 'savings-account' || investmentId === 'digital-bank' || investmentId === 'time-deposit' || investmentId === 'pag-ibig-mp2') {
+            // Create interest account active investment (very slow progress - 10 min)
+            this.createActiveInvestment('interest', amount, option.name, option.expectedReturn);
 
-        // If Piggy Bank or Savings Account, add to emergency fund
-        if (investmentId === 'piggy-bank' || investmentId === 'savings-account') {
-            this.player.financials.emergencyFund += amount;
-            this.checkEmergencyFundStatus();
-            this.addNotification(`Added ₱${amount.toLocaleString()} to Emergency Fund`, option.icon);
-            this.addActivityLog(`Emergency Fund: +₱${amount.toLocaleString()}`, option.icon);
-
-            if (this.hasEmergencyFund && this.player.financials.emergencyFund === this.emergencyFundRequired) {
-                this.showAchievement('Emergency Fund Complete! 🎉', '💰');
-                this.addNotification('🎉 All investments are now unlocked!', '✅');
+            // For savings account or digital bank, also track emergency fund
+            if (investmentId === 'savings-account' || investmentId === 'digital-bank') {
+                this.checkEmergencyFundStatus();
+                if (this.hasEmergencyFund) {
+                    this.showAchievement('Emergency Fund Complete! 🎉', '💰');
+                    this.addNotification('🎉 All investments are now unlocked!', '✅');
+                }
             }
+        } else if (investmentId === 'stocks-index') {
+            // Create stocks active investment (slower progress - 5 min)
+            this.createActiveInvestment('stocks', amount, option.name, option.expectedReturn);
+        } else if (investmentId === 'mutual-fund') {
+            // Create mutual fund active investment (slower progress - 5 min)
+            this.createActiveInvestment('mutual', amount, option.name, option.expectedReturn);
         } else {
-            // Regular investment
+            // Regular passive investment (real estate, crypto, etc.)
+            this.player.financials.cash -= amount;
+
             const investment = {
                 id: Date.now(),
                 type: investmentId,
@@ -953,6 +1005,12 @@ class PinoyRPG {
     startBusiness(businessId) {
         const business = this.businessOpportunities.find(b => b.id === businessId);
         if (!business) return;
+
+        // Check business emergency fund requirement
+        if (!this.hasBusinessEmergencyFund) {
+            this.addNotification('🚨 Build ₱30,000 cash reserve first! This protects your business from emergencies.', '⚠️');
+            return;
+        }
 
         if (this.player.financials.cash < business.initialCost) {
             this.addNotification('Not enough capital!', '❌');
@@ -1025,9 +1083,15 @@ class PinoyRPG {
     calculateNetWorth() {
         let netWorth = this.player.financials.cash || 0;
         netWorth += this.player.financials.savings || 0;
-        netWorth += this.player.financials.emergencyFund || 0;
 
-        // Add investment values
+        // Add active investments
+        if (this.activeInvestments && this.activeInvestments.length > 0) {
+            this.activeInvestments.forEach(inv => {
+                netWorth += inv.principal || 0;
+            });
+        }
+
+        // Add passive investment values
         this.investments.forEach(inv => {
             netWorth += inv.amount || 0;
         });
@@ -1074,7 +1138,14 @@ class PinoyRPG {
 
             switch (goal.type) {
                 case 'savings':
-                    goal.current = this.player.financials.emergencyFund;
+                    // Calculate current emergency fund (active interest investments)
+                    let currentEmergencyFund = 0;
+                    if (this.activeInvestments && this.activeInvestments.length > 0) {
+                        currentEmergencyFund = this.activeInvestments
+                            .filter(inv => inv.type === 'interest')
+                            .reduce((sum, inv) => sum + inv.principal, 0);
+                    }
+                    goal.current = currentEmergencyFund;
                     break;
                 case 'networth':
                     goal.current = this.player.financials.totalNetWorth;
@@ -1144,7 +1215,7 @@ class PinoyRPG {
     }
 
     meetsEducationRequirement(required) {
-        const levels = ['High School', 'College Level', 'College Graduate', 'Post Graduate'];
+        const levels = ['None', 'High School', 'College Level', 'College Graduate', 'Post Graduate'];
         const playerLevel = levels.indexOf(this.player.education);
         const requiredLevel = levels.indexOf(required);
         return playerLevel >= requiredLevel;
@@ -1202,12 +1273,28 @@ class PinoyRPG {
     }
 
     updateFinancialDisplay() {
-        if (document.getElementById('player-gold')) {
-            document.getElementById('player-gold').textContent = Math.floor(this.player.financials.cash).toLocaleString();
-        }
-        if (document.getElementById('gold-display')) {
-            document.getElementById('gold-display').textContent = Math.floor(this.player.financials.cash).toLocaleString();
-        }
+        const cashDisplay = Math.floor(this.player.financials.cash).toLocaleString();
+
+        // Update all cash displays across different pages
+        const cashElements = [
+            'player-gold',
+            'gold-display',
+            'player-gold-dashboard',
+            'player-gold-jobs',
+            'player-gold-invest',
+            'player-gold-crypto',
+            'player-gold-business',
+            'player-gold-education',
+            'player-gold-assets',
+            'player-gold-goals'
+        ];
+
+        cashElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = cashDisplay;
+            }
+        });
     }
 
     updateAttributesDisplay() {
@@ -1385,25 +1472,25 @@ class PinoyRPG {
     }
 
     addNotification(message, icon = '📢') {
-        const list = document.getElementById('notifications-list');
-        if (!list) return;
+        // Notifications now go to activity feed (combined with activity log)
+        const feed = document.getElementById('activity-feed');
+        if (!feed) return;
 
         const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-        const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.innerHTML = `
-            <span class="notification-icon">${icon}</span>
-            <div class="notification-content">
-                <div class="notification-text">${message}</div>
-                <div class="notification-time">${time}</div>
-            </div>
+        const activity = document.createElement('div');
+        activity.className = 'activity-item';
+        activity.innerHTML = `
+            <span class="activity-icon">${icon}</span>
+            <span class="activity-text">${message}</span>
+            <span class="activity-time">${time}</span>
         `;
 
-        list.insertBefore(notification, list.firstChild);
+        feed.insertBefore(activity, feed.firstChild);
 
-        while (list.children.length > 5) {
-            list.removeChild(list.lastChild);
+        // Keep only last 50 items
+        while (feed.children.length > 50) {
+            feed.removeChild(feed.lastChild);
         }
     }
 
@@ -1425,7 +1512,10 @@ class PinoyRPG {
             businesses: this.businesses,
             goals: this.goals,
             barangay: this.barangay,
-            gameStats: this.gameStats
+            gameStats: this.gameStats,
+            cryptoMarket: this.cryptoMarket,
+            activeInvestments: this.activeInvestments,
+            activityLog: this.activityLog
         };
 
         localStorage.setItem('pinoyrpg_save', JSON.stringify(saveData));
@@ -1474,6 +1564,9 @@ class PinoyRPG {
                 this.goals = data.goals || this.goals;
                 this.barangay = data.barangay || this.barangay;
                 this.gameStats = data.gameStats || this.gameStats;
+                this.cryptoMarket = data.cryptoMarket || this.cryptoMarket;
+                this.activeInvestments = data.activeInvestments || [];
+                this.activityLog = data.activityLog || [];
 
                 console.log('✅ Save data loaded successfully!');
             } catch (e) {
@@ -1556,6 +1649,400 @@ class PinoyRPG {
             setTimeout(() => {
                 popup.classList.remove('show');
             }, 4000);
+        }
+    }
+
+    // ===================================
+    // CRYPTO TRADING SYSTEM
+    // ===================================
+
+    initCryptoMarket() {
+        if (!this.cryptoMarket) {
+            this.cryptoMarket = {
+                lastPriceUpdate: Date.now(),
+                nextPriceUpdate: Date.now() + (5 * 60 * 1000), // 5 minutes (represents 24 hours)
+                cryptoData: [
+                    { id: 'btc', name: 'Bitcoin', symbol: 'BTC', price: 3000000, priceChange: 0, balance: 0 },
+                    { id: 'eth', name: 'Ethereum', symbol: 'ETH', price: 150000, priceChange: 0, balance: 0 },
+                    { id: 'bnb', name: 'Binance Coin', symbol: 'BNB', price: 15000, priceChange: 0, balance: 0 },
+                    { id: 'xrp', name: 'Ripple', symbol: 'XRP', price: 30, priceChange: 0, balance: 0 },
+                    { id: 'ada', name: 'Cardano', symbol: 'ADA', price: 20, priceChange: 0, balance: 0 },
+                    { id: 'sol', name: 'Solana', symbol: 'SOL', price: 8000, priceChange: 0, balance: 0 },
+                    { id: 'doge', name: 'Dogecoin', symbol: 'DOGE', price: 5, priceChange: 0, balance: 0 },
+                    { id: 'dot', name: 'Polkadot', symbol: 'DOT', price: 400, priceChange: 0, balance: 0 },
+                    { id: 'ltc', name: 'Litecoin', symbol: 'LTC', price: 5000, priceChange: 0, balance: 0 },
+                    { id: 'trx', name: 'TRON', symbol: 'TRX', price: 8, priceChange: 0, balance: 0 }
+                ]
+            };
+        }
+
+        // Check if prices need updating
+        const now = Date.now();
+        if (now >= this.cryptoMarket.nextPriceUpdate) {
+            this.updateCryptoPrices();
+        }
+
+        // Start timer update interval
+        setInterval(() => this.updateCryptoTimer(), 1000);
+    }
+
+    updateCryptoPrices() {
+        const now = Date.now();
+
+        this.cryptoMarket.cryptoData.forEach(crypto => {
+            // Main probability: 60% no change, 20% increase, 20% decrease
+            const mainRoll = Math.random();
+            let priceChange = 0;
+
+            if (mainRoll < 0.6) {
+                priceChange = 0;
+            } else if (mainRoll < 0.8) {
+                // 20% increase path
+                const increaseRoll = Math.random();
+                if (increaseRoll < 0.5) {
+                    priceChange = 0;
+                } else if (increaseRoll < 0.8) {
+                    priceChange = Math.random() * 0.10;
+                } else if (increaseRoll < 0.95) {
+                    priceChange = Math.random() * 0.20;
+                } else {
+                    priceChange = Math.random() * 0.30;
+                }
+            } else {
+                // 20% decrease path
+                const decreaseRoll = Math.random();
+                if (decreaseRoll < 0.5) {
+                    priceChange = 0;
+                } else if (decreaseRoll < 0.8) {
+                    priceChange = -(Math.random() * 0.10);
+                } else if (decreaseRoll < 0.95) {
+                    priceChange = -(Math.random() * 0.20);
+                } else {
+                    priceChange = -(Math.random() * 0.30);
+                }
+            }
+
+            const oldPrice = crypto.price;
+            crypto.price = Math.max(0.01, crypto.price * (1 + priceChange));
+            crypto.priceChange = ((crypto.price - oldPrice) / oldPrice) * 100;
+        });
+
+        this.cryptoMarket.lastPriceUpdate = now;
+        this.cryptoMarket.nextPriceUpdate = now + (5 * 60 * 1000);
+
+        this.addNotification('Crypto prices have been updated!', '₿');
+        this.addActivityLog('Cryptocurrency prices updated', '₿');
+        this.updateCryptoUI();
+        this.saveGame();
+    }
+
+    updateCryptoTimer() {
+        const timerDisplay = document.getElementById('crypto-timer-display');
+        if (!timerDisplay || !this.cryptoMarket) return;
+
+        const now = Date.now();
+        const timeRemaining = this.cryptoMarket.nextPriceUpdate - now;
+
+        if (timeRemaining <= 0) {
+            timerDisplay.textContent = '00:00:00';
+            this.updateCryptoPrices();
+        } else {
+            const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+            const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+            timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+
+    buyCrypto(cryptoId, amount) {
+        const crypto = this.cryptoMarket.cryptoData.find(c => c.id === cryptoId);
+        if (!crypto || amount <= 0) return;
+
+        const cost = amount * crypto.price;
+
+        if (this.player.financials.cash < cost) {
+            this.addNotification('Insufficient funds!', '❌');
+            return;
+        }
+
+        this.player.financials.cash -= cost;
+        crypto.balance += amount;
+
+        this.addNotification(`Bought ${amount.toFixed(8)} ${crypto.symbol} for ₱${cost.toLocaleString()}!`, '₿');
+        this.addActivityLog(`Purchased ${amount.toFixed(8)} ${crypto.symbol}`, '₿');
+        this.updateCryptoUI();
+        this.updateUI();
+        this.saveGame();
+    }
+
+    sellCrypto(cryptoId, amount) {
+        const crypto = this.cryptoMarket.cryptoData.find(c => c.id === cryptoId);
+        if (!crypto || amount <= 0) return;
+
+        if (crypto.balance < amount) {
+            this.addNotification('Insufficient crypto balance!', '❌');
+            return;
+        }
+
+        const value = amount * crypto.price;
+        this.player.financials.cash += value;
+        crypto.balance -= amount;
+
+        this.addNotification(`Sold ${amount.toFixed(8)} ${crypto.symbol} for ₱${value.toLocaleString()}!`, '💰');
+        this.addActivityLog(`Sold ${amount.toFixed(8)} ${crypto.symbol}`, '💰');
+        this.updateCryptoUI();
+        this.updateUI();
+        this.saveGame();
+    }
+
+    getTotalCryptoValue() {
+        if (!this.cryptoMarket) return 0;
+        return this.cryptoMarket.cryptoData.reduce((total, crypto) => {
+            return total + (crypto.balance * crypto.price);
+        }, 0);
+    }
+
+    updateCryptoUI() {
+        const cryptoGrid = document.getElementById('crypto-trading-grid');
+        const totalValueEl = document.getElementById('total-crypto-value');
+        const playerGoldEl = document.getElementById('player-gold-crypto');
+
+        if (!cryptoGrid || !this.cryptoMarket) return;
+
+        // Update total value
+        const totalValue = this.getTotalCryptoValue();
+        if (totalValueEl) {
+            totalValueEl.textContent = `₱${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+        }
+
+        // Update player cash display
+        if (playerGoldEl) {
+            playerGoldEl.textContent = Math.floor(this.player.financials.cash).toLocaleString();
+        }
+
+        // Render crypto cards
+        cryptoGrid.innerHTML = this.cryptoMarket.cryptoData.map(crypto => {
+            const priceChangeClass = crypto.priceChange > 0 ? 'positive' : crypto.priceChange < 0 ? 'negative' : 'neutral';
+            const priceChangeIcon = crypto.priceChange > 0 ? '📈' : crypto.priceChange < 0 ? '📉' : '➖';
+            const borderColor = crypto.priceChange > 0 ? '#22C55E' : crypto.priceChange < 0 ? '#EF4444' : 'var(--border-color)';
+
+            return `
+                <div style="padding: 24px; border: 3px solid ${borderColor}; border-radius: 16px; background: var(--card-bg); box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 2px solid var(--border-color);">
+                        <div>
+                            <div style="font-size: 26px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px;">${crypto.symbol}</div>
+                            <div style="font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-top: 2px;">${crypto.name}</div>
+                        </div>
+                        <div style="text-align: right; background: ${priceChangeClass === 'positive' ? 'rgba(34, 197, 94, 0.15)' : priceChangeClass === 'negative' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(128, 128, 128, 0.15)'}; padding: 8px 12px; border-radius: 8px;">
+                            <div style="font-size: 18px; margin-bottom: 2px;">${priceChangeIcon}</div>
+                            <div style="font-size: 15px; font-weight: 700; color: ${priceChangeClass === 'positive' ? '#22C55E' : priceChangeClass === 'negative' ? '#EF4444' : 'var(--text-tertiary)'};">
+                                ${crypto.priceChange >= 0 ? '+' : ''}${crypto.priceChange.toFixed(2)}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-secondary); padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">💎 Your Balance</div>
+                        <div style="font-size: 15px; font-weight: 700; color: var(--text-primary); font-family: monospace;">${crypto.balance.toFixed(8)} ${crypto.symbol}</div>
+                    </div>
+
+                    <div style="background: var(--bg-secondary); padding: 12px; border-radius: 10px; margin-bottom: 18px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">💰 Current Price</div>
+                        <div style="font-size: 18px; font-weight: 800; color: var(--primary); font-family: monospace;">₱${crypto.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-bottom: 6px;">Amount to Trade</label>
+                        <input
+                            type="number"
+                            id="crypto-amount-${crypto.id}"
+                            placeholder="0.00000000"
+                            min="0"
+                            step="0.00000001"
+                            style="width: 100%; padding: 14px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 10px; color: var(--text-primary); font-size: 15px; font-weight: 600; font-family: monospace; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);"
+                            onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.05), 0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                            onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.05)'"
+                        />
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <button
+                            onclick="game.buyCrypto('${crypto.id}', parseFloat(document.getElementById('crypto-amount-${crypto.id}').value) || 0)"
+                            style="padding: 14px; background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3); text-transform: uppercase; letter-spacing: 0.5px;"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(34, 197, 94, 0.4)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(34, 197, 94, 0.3)'"
+                            onmousedown="this.style.transform='translateY(0)'"
+                            onmouseup="this.style.transform='translateY(-2px)'">
+                            🛒 Buy
+                        </button>
+                        <button
+                            onclick="game.sellCrypto('${crypto.id}', parseFloat(document.getElementById('crypto-amount-${crypto.id}').value) || 0)"
+                            style="padding: 14px; background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3); text-transform: uppercase; letter-spacing: 0.5px;"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.4)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(239, 68, 68, 0.3)'"
+                            onmousedown="this.style.transform='translateY(0)'"
+                            onmouseup="this.style.transform='translateY(-2px)'">
+                            💸 Sell
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ===================================
+    // INVESTMENT MANAGEMENT SYSTEM
+    // ===================================
+
+    createActiveInvestment(type, amount, investmentName = null, customInterestRate = null) {
+        if (this.player.financials.cash < amount) {
+            this.addNotification('Insufficient funds!', '❌');
+            return false;
+        }
+
+        let duration, interestRate, name;
+        if (type === 'interest') {
+            duration = 10 * 60 * 1000; // 10 minutes (represents 1 year)
+            interestRate = customInterestRate !== null ? customInterestRate / 100 : 0.05;
+            name = investmentName || 'Interest Account';
+        } else if (type === 'stocks') {
+            duration = 5 * 60 * 1000; // 5 minutes (represents 6 months)
+            interestRate = customInterestRate !== null ? customInterestRate / 100 : 0.03;
+            name = investmentName || 'Stock Investment';
+        } else if (type === 'mutual') {
+            duration = 5 * 60 * 1000; // 5 minutes (represents 6 months)
+            interestRate = customInterestRate !== null ? customInterestRate / 100 : 0.04;
+            name = investmentName || 'Mutual Fund';
+        }
+
+        if (!this.activeInvestments) {
+            this.activeInvestments = [];
+        }
+
+        const investment = {
+            id: 'inv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            name: name,
+            type: type,
+            principal: amount,
+            interestRate: interestRate,
+            startTime: Date.now(),
+            duration: duration,
+            matured: false
+        };
+
+        this.player.financials.cash -= amount;
+        this.activeInvestments.push(investment);
+
+        this.addNotification(`Created ${name} with ₱${amount.toLocaleString()}!`, '📈');
+        this.addActivityLog(`Invested ₱${amount.toLocaleString()} in ${name}`, '📈');
+        this.updateUI();
+        this.saveGame();
+        return true;
+    }
+
+    withdrawInvestment(investmentId) {
+        const investment = this.activeInvestments.find(inv => inv.id === investmentId);
+        if (!investment || !investment.matured) {
+            this.addNotification('Investment not ready for withdrawal!', '❌');
+            return;
+        }
+
+        const total = investment.principal + (investment.principal * investment.interestRate);
+        this.player.financials.cash += total;
+
+        this.activeInvestments = this.activeInvestments.filter(inv => inv.id !== investmentId);
+
+        this.addNotification(`Withdrew ₱${total.toLocaleString()} from ${investment.name}!`, '💰');
+        this.addActivityLog(`Withdrew ₱${total.toLocaleString()} from ${investment.name}`, '💰');
+        this.checkEmergencyFundStatus();
+        this.calculateNetWorth();
+        this.updateUI();
+        this.saveGame();
+    }
+
+    reinvestInvestment(investmentId) {
+        const investment = this.activeInvestments.find(inv => inv.id === investmentId);
+        if (!investment || !investment.matured) {
+            this.addNotification('Investment not ready for reinvestment!', '❌');
+            return;
+        }
+
+        const total = investment.principal + (investment.principal * investment.interestRate);
+        this.activeInvestments = this.activeInvestments.filter(inv => inv.id !== investmentId);
+
+        this.player.financials.cash += total;
+        this.createActiveInvestment(investment.type, total);
+
+        this.addNotification(`Reinvested ₱${total.toLocaleString()} in ${investment.name}!`, '🔄');
+    }
+
+    // ===================================
+    // ACTIVITY LOG SYSTEM (Enhanced)
+    // ===================================
+
+    updateActivityLogView() {
+        const logList = document.getElementById('activity-log-list');
+        if (!logList) return;
+
+        if (!this.activityLog || this.activityLog.length === 0) {
+            logList.innerHTML = '<div style="text-align: center; color: var(--text-tertiary); padding: 20px;">No activities yet. Start your journey!</div>';
+            return;
+        }
+
+        logList.innerHTML = this.activityLog.slice(0, 50).map(log => {
+            const date = new Date(log.timestamp);
+            const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            return `
+                <div style="display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); align-items: start;">
+                    <div style="font-size: 24px; flex-shrink: 0;">${log.icon}</div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 14px; color: var(--text-primary);">${log.message}</div>
+                        <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">${dateStr} at ${timeStr}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    addActivityLog(message, icon = '📝') {
+        if (!this.activityLog) {
+            this.activityLog = [];
+        }
+
+        this.activityLog.unshift({
+            message: message,
+            icon: icon,
+            timestamp: Date.now()
+        });
+
+        // Keep only last 100 entries
+        if (this.activityLog.length > 100) {
+            this.activityLog = this.activityLog.slice(0, 100);
+        }
+
+        // Update the view if we're on the assets page
+        this.updateActivityLogView();
+
+        // Also update the feed
+        const feed = document.getElementById('activity-feed');
+        if (!feed) return;
+
+        const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+        const item = document.createElement('div');
+        item.className = 'feed-item';
+        item.innerHTML = `
+            <span class="feed-icon">${icon}</span>
+            <span class="feed-message">${message}</span>
+            <span class="feed-time">${time}</span>
+        `;
+
+        feed.insertBefore(item, feed.firstChild);
+
+        while (feed.children.length > 10) {
+            feed.removeChild(feed.lastChild);
         }
     }
 }
