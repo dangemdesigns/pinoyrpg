@@ -489,8 +489,18 @@ class PinoyRPG {
                 minInvestment: 100,
                 expectedReturn: 0.25,
                 risk: 'Very Low',
-                description: 'Bank savings, very low returns but safe',
+                description: 'Traditional bank savings, very low returns but safe',
                 icon: '🏦',
+                liquidity: 'High'
+            },
+            {
+                id: 'digital-bank',
+                name: 'Digital Banking',
+                minInvestment: 1000,
+                expectedReturn: 4.0,
+                risk: 'Very Low',
+                description: 'Online banking with better interest rates',
+                icon: '📱',
                 liquidity: 'High'
             },
             {
@@ -893,9 +903,9 @@ class PinoyRPG {
         const option = this.investmentOptions.find(opt => opt.id === investmentId);
         if (!option) return;
 
-        // Check emergency fund requirement (except for Savings Account)
-        if (investmentId !== 'savings-account' && !this.hasEmergencyFund) {
-            this.addNotification('🚨 Build ₱5,000 emergency fund first! Invest in Savings Account.', '⚠️');
+        // Check emergency fund requirement (except for Savings Account and Digital Bank)
+        if (investmentId !== 'savings-account' && investmentId !== 'digital-bank' && !this.hasEmergencyFund) {
+            this.addNotification('🚨 Build ₱5,000 emergency fund first! Invest in Savings Account or Digital Bank.', '⚠️');
             return;
         }
 
@@ -910,12 +920,12 @@ class PinoyRPG {
         }
 
         // Check if this investment type should create an active investment with progress bar
-        if (investmentId === 'savings-account' || investmentId === 'time-deposit' || investmentId === 'pag-ibig-mp2') {
+        if (investmentId === 'savings-account' || investmentId === 'digital-bank' || investmentId === 'time-deposit' || investmentId === 'pag-ibig-mp2') {
             // Create interest account active investment (very slow progress - 10 min)
-            this.createActiveInvestment('interest', amount, option.name);
+            this.createActiveInvestment('interest', amount, option.name, option.expectedReturn);
 
-            // For savings account, also track emergency fund
-            if (investmentId === 'savings-account') {
+            // For savings account or digital bank, also track emergency fund
+            if (investmentId === 'savings-account' || investmentId === 'digital-bank') {
                 this.checkEmergencyFundStatus();
                 if (this.hasEmergencyFund) {
                     this.showAchievement('Emergency Fund Complete! 🎉', '💰');
@@ -924,10 +934,10 @@ class PinoyRPG {
             }
         } else if (investmentId === 'stocks-index') {
             // Create stocks active investment (slower progress - 5 min)
-            this.createActiveInvestment('stocks', amount, option.name);
+            this.createActiveInvestment('stocks', amount, option.name, option.expectedReturn);
         } else if (investmentId === 'mutual-fund') {
             // Create mutual fund active investment (slower progress - 5 min)
-            this.createActiveInvestment('mutual', amount, option.name);
+            this.createActiveInvestment('mutual', amount, option.name, option.expectedReturn);
         } else {
             // Regular passive investment (real estate, crypto, etc.)
             this.player.financials.cash -= amount;
@@ -1819,7 +1829,7 @@ class PinoyRPG {
     // INVESTMENT MANAGEMENT SYSTEM
     // ===================================
 
-    createActiveInvestment(type, amount, investmentName = null) {
+    createActiveInvestment(type, amount, investmentName = null, customInterestRate = null) {
         if (amount < 5000) {
             this.addNotification('Minimum investment is ₱5,000!', '❌');
             return false;
@@ -1833,15 +1843,15 @@ class PinoyRPG {
         let duration, interestRate, name;
         if (type === 'interest') {
             duration = 10 * 60 * 1000; // 10 minutes (represents 1 year)
-            interestRate = 0.05;
+            interestRate = customInterestRate !== null ? customInterestRate / 100 : 0.05;
             name = investmentName || 'Interest Account';
         } else if (type === 'stocks') {
             duration = 5 * 60 * 1000; // 5 minutes (represents 6 months)
-            interestRate = 0.03;
+            interestRate = customInterestRate !== null ? customInterestRate / 100 : 0.03;
             name = investmentName || 'Stock Investment';
         } else if (type === 'mutual') {
             duration = 5 * 60 * 1000; // 5 minutes (represents 6 months)
-            interestRate = 0.04;
+            interestRate = customInterestRate !== null ? customInterestRate / 100 : 0.04;
             name = investmentName || 'Mutual Fund';
         }
 

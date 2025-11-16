@@ -206,7 +206,7 @@ class UIController {
                         <button class="btn-primary btn-small"
                                 onclick="ui.showInvestmentModal('${investment.id}')"
                                 ${!canAfford ? 'disabled' : ''}>
-                            ${isSavingsAccount ? 'Add to Emergency Fund' : 'Invest'}
+                            ${isSavingsAccount ? 'Save Money' : 'Invest'}
                         </button>
                     `}
                 </div>
