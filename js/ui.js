@@ -102,8 +102,19 @@ class UIController {
         const jobsGrid = document.getElementById('jobs-grid');
 
         jobsGrid.innerHTML = game.jobMarket.map(job => {
-            const meetsReq = game.meetsEducationRequirement(job.requirements.education || 'High School');
+            const meetsEducation = game.meetsEducationRequirement(job.requirements.education || 'High School');
+            const requiredExp = job.requirements.experience || 0;
+            const currentExp = game.player.currentJob.experience || 0;
+            const meetsExperience = currentExp >= requiredExp;
+            const meetsAllReq = meetsEducation && meetsExperience;
             const isCurrent = game.player.currentJob.title === job.title;
+
+            let lockReason = '';
+            if (!meetsEducation) {
+                lockReason = `Need ${job.requirements.education}`;
+            } else if (!meetsExperience) {
+                lockReason = `Need ${requiredExp} months exp`;
+            }
 
             return `
                 <div class="shop-item ${isCurrent ? 'current-job' : ''}">
@@ -112,8 +123,14 @@ class UIController {
                     <div class="shop-item-desc">${job.description}</div>
                     <div class="shop-item-price">₱${job.salary.toLocaleString()}/month</div>
                     <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 8px;">
-                        Required: ${job.requirements.education}
+                        Required: ${job.requirements.education}${requiredExp > 0 ? ` • ${requiredExp} months exp` : ''}
                     </div>
+                    ${!meetsAllReq && !isCurrent ? `
+                        <div style="background: rgba(255,71,87,0.1); padding: 8px; border-radius: 6px; margin-bottom: 8px;">
+                            <div style="font-size: 10px; color: #FF4757; font-weight: 600;">🔒 ${lockReason}</div>
+                            ${!meetsExperience ? `<div style="font-size: 9px; color: var(--text-secondary);">You have: ${currentExp} months</div>` : ''}
+                        </div>
+                    ` : ''}
                     ${isCurrent ? `
                         <button class="btn-secondary btn-small" disabled>
                             Current Job
@@ -121,8 +138,8 @@ class UIController {
                     ` : `
                         <button class="btn-primary btn-small"
                                 onclick="game.changeJob('${job.id}')"
-                                ${!meetsReq ? 'disabled' : ''}>
-                            ${meetsReq ? 'Apply' : 'Locked'}
+                                ${!meetsAllReq ? 'disabled' : ''}>
+                            ${meetsAllReq ? 'Apply' : 'Locked'}
                         </button>
                     `}
                 </div>

@@ -312,6 +312,12 @@ class PinoyRPG {
         this.player.totalWorkDone++;
         this.gameStats.totalWorkActions++;
 
+        // Track work experience (every 10 work sessions = 1 month of experience)
+        if (this.player.totalWorkDone % 10 === 0) {
+            this.player.currentJob.experience++;
+            this.addNotification(`Gained 1 month of work experience! Total: ${this.player.currentJob.experience} months`, '📚');
+        }
+
         // Gain XP
         this.gainXP(5);
 
