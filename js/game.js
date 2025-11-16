@@ -213,8 +213,11 @@ class PinoyRPG {
     checkEmergencyFundStatus() {
         const wasReady = this.hasEmergencyFund;
 
-        // Calculate total emergency fund (includes active savings investments)
+        // Calculate total emergency fund (includes Piggy Bank + active savings investments)
         let totalEmergencyFund = 0;
+
+        // Add Piggy Bank balance
+        totalEmergencyFund += this.player.financials.emergencyFund || 0;
 
         // Add active interest investments (savings account, digital bank, time deposits, pag-ibig)
         if (this.activeInvestments && this.activeInvestments.length > 0) {
@@ -513,6 +516,16 @@ class PinoyRPG {
 
     createInvestmentOptions() {
         return [
+            {
+                id: 'piggy-bank',
+                name: 'Piggy Bank (Emergency Fund)',
+                minInvestment: 100,
+                expectedReturn: 0,
+                risk: 'None',
+                description: 'Safe storage for emergency fund. No interest, just protection.',
+                icon: '🐷',
+                liquidity: 'High'
+            },
             {
                 id: 'savings-account',
                 name: 'Savings Account',
@@ -933,9 +946,9 @@ class PinoyRPG {
         const option = this.investmentOptions.find(opt => opt.id === investmentId);
         if (!option) return;
 
-        // Check emergency fund requirement (except for Savings Account and Digital Bank)
-        if (investmentId !== 'savings-account' && investmentId !== 'digital-bank' && !this.hasEmergencyFund) {
-            this.addNotification('🚨 Build ₱5,000 emergency fund first! Invest in Savings Account or Digital Bank.', '⚠️');
+        // Check emergency fund requirement (except for Piggy Bank, Savings Account, and Digital Bank)
+        if (investmentId !== 'piggy-bank' && investmentId !== 'savings-account' && investmentId !== 'digital-bank' && !this.hasEmergencyFund) {
+            this.addNotification('🚨 Build ₱5,000 emergency fund first! Use Piggy Bank.', '⚠️');
             return;
         }
 
@@ -946,6 +959,26 @@ class PinoyRPG {
 
         if (this.player.financials.cash < amount) {
             this.addNotification('Not enough cash!', '❌');
+            return;
+        }
+
+        // Piggy Bank: directly add to emergency fund (no active investment, instant)
+        if (investmentId === 'piggy-bank') {
+            this.player.financials.cash -= amount;
+            this.player.financials.emergencyFund += amount;
+            this.checkEmergencyFundStatus();
+            this.addNotification(`Added ₱${amount.toLocaleString()} to Emergency Fund`, option.icon);
+            this.addActivityLog(`Emergency Fund: +₱${amount.toLocaleString()}`, option.icon);
+
+            if (this.hasEmergencyFund && this.player.financials.emergencyFund >= this.emergencyFundRequired) {
+                this.showAchievement('Emergency Fund Complete! 🎉', '💰');
+                this.addNotification('🎉 All investments are now unlocked!', '✅');
+            }
+
+            this.calculateNetWorth();
+            this.updateUI();
+            this.updateGuidance();
+            this.saveGame();
             return;
         }
 
