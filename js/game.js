@@ -33,9 +33,13 @@ class PinoyRPG {
         this.emergencyFundRequired = 5000;
         this.hasEmergencyFund = false;
 
+        // Business Emergency Fund Requirement
+        this.businessEmergencyFundRequired = 30000;
+        this.hasBusinessEmergencyFund = false;
+
         // Random Event System
         this.lastEventTime = Date.now();
-        this.eventCooldown = 120000; // 2 minutes minimum between events
+        this.eventCooldown = 600000; // 10 minutes minimum between events
 
         // Action-based progression (not time-based)
         this.workEnergy = 100;
@@ -53,6 +57,9 @@ class PinoyRPG {
     init() {
         this.loadGame();
         this.initCryptoMarket();
+        // Recalculate emergency fund statuses after loading
+        this.checkEmergencyFundStatus();
+        this.checkBusinessEmergencyFundStatus();
         this.updateUI();
         this.initializeGoals();
         this.updateGuidance();
@@ -226,14 +233,27 @@ class PinoyRPG {
         }
     }
 
+    checkBusinessEmergencyFundStatus() {
+        const wasReady = this.hasBusinessEmergencyFund;
+        // Business emergency fund = cash reserves
+        this.hasBusinessEmergencyFund = this.player.financials.cash >= this.businessEmergencyFundRequired;
+
+        // Notify if status changed
+        if (wasReady && !this.hasBusinessEmergencyFund) {
+            this.addNotification('⚠️ Cash below ₱30,000! Business opportunities locked.', '🚨');
+        } else if (!wasReady && this.hasBusinessEmergencyFund) {
+            this.addNotification('✅ You have ₱30,000 cash! Business opportunities unlocked.', '🎉');
+        }
+    }
+
     createPlayer() {
         return {
             name: 'Juan dela Cruz',
             age: 22,
             education: 'High School Graduate',
             currentJob: {
-                title: 'Minimum Wage Worker',
-                monthlySalary: 15000,
+                title: 'Informal Sector Worker',
+                monthlySalary: 10000,
                 experience: 0,
                 skills: []
             },
@@ -310,6 +330,9 @@ class PinoyRPG {
         this.player.financials.totalEarned += earnings;
         this.player.totalWorkDone++;
         this.gameStats.totalWorkActions++;
+
+        // Check business emergency fund status when cash changes
+        this.checkBusinessEmergencyFundStatus();
 
         // Track work experience (every 10 work sessions = 1 month of experience)
         if (this.player.totalWorkDone % 10 === 0) {
@@ -403,6 +426,14 @@ class PinoyRPG {
 
     createJobMarket() {
         return [
+            {
+                id: 'informal-sector',
+                title: 'Informal Sector Worker',
+                salary: 10000,
+                requirements: { education: 'None', experience: 0 },
+                description: 'Laborer, tindera, helper - no formal employment',
+                growth: 'Limited'
+            },
             {
                 id: 'minimum-wage',
                 title: 'Minimum Wage Worker',
@@ -975,6 +1006,12 @@ class PinoyRPG {
         const business = this.businessOpportunities.find(b => b.id === businessId);
         if (!business) return;
 
+        // Check business emergency fund requirement
+        if (!this.hasBusinessEmergencyFund) {
+            this.addNotification('🚨 Build ₱30,000 cash reserve first! This protects your business from emergencies.', '⚠️');
+            return;
+        }
+
         if (this.player.financials.cash < business.initialCost) {
             this.addNotification('Not enough capital!', '❌');
             return;
@@ -1178,7 +1215,7 @@ class PinoyRPG {
     }
 
     meetsEducationRequirement(required) {
-        const levels = ['High School', 'College Level', 'College Graduate', 'Post Graduate'];
+        const levels = ['None', 'High School', 'College Level', 'College Graduate', 'Post Graduate'];
         const playerLevel = levels.indexOf(this.player.education);
         const requiredLevel = levels.indexOf(required);
         return playerLevel >= requiredLevel;
@@ -1236,12 +1273,28 @@ class PinoyRPG {
     }
 
     updateFinancialDisplay() {
-        if (document.getElementById('player-gold')) {
-            document.getElementById('player-gold').textContent = Math.floor(this.player.financials.cash).toLocaleString();
-        }
-        if (document.getElementById('gold-display')) {
-            document.getElementById('gold-display').textContent = Math.floor(this.player.financials.cash).toLocaleString();
-        }
+        const cashDisplay = Math.floor(this.player.financials.cash).toLocaleString();
+
+        // Update all cash displays across different pages
+        const cashElements = [
+            'player-gold',
+            'gold-display',
+            'player-gold-dashboard',
+            'player-gold-jobs',
+            'player-gold-invest',
+            'player-gold-crypto',
+            'player-gold-business',
+            'player-gold-education',
+            'player-gold-assets',
+            'player-gold-goals'
+        ];
+
+        cashElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = cashDisplay;
+            }
+        });
     }
 
     updateAttributesDisplay() {
