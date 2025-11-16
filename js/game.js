@@ -35,7 +35,7 @@ class PinoyRPG {
 
         // Random Event System
         this.lastEventTime = Date.now();
-        this.eventCooldown = 120000; // 2 minutes minimum between events
+        this.eventCooldown = 600000; // 10 minutes minimum between events
 
         // Action-based progression (not time-based)
         this.workEnergy = 100;
@@ -149,14 +149,19 @@ class PinoyRPG {
             return;
         }
 
+        // Don't trigger too early - player needs experience first
+        if (this.player.totalWorkDone < 20) {
+            return;
+        }
+
         // Check cooldown
         const timeSinceLastEvent = Date.now() - this.lastEventTime;
         if (timeSinceLastEvent < this.eventCooldown) {
             return;
         }
 
-        // Random chance (10% every check)
-        if (Math.random() > 0.1) {
+        // Random chance (5% every check - reduced from 10%)
+        if (Math.random() > 0.05) {
             return;
         }
 
@@ -464,6 +469,16 @@ class PinoyRPG {
 
     createInvestmentOptions() {
         return [
+            {
+                id: 'piggy-bank',
+                name: 'Piggy Bank (Emergency Fund)',
+                minInvestment: 100,
+                expectedReturn: 0,
+                risk: 'None',
+                description: 'Safe storage for emergency fund. No interest, just protection.',
+                icon: '🐷',
+                liquidity: 'High'
+            },
             {
                 id: 'savings-account',
                 name: 'Savings Account',
@@ -874,9 +889,9 @@ class PinoyRPG {
         const option = this.investmentOptions.find(opt => opt.id === investmentId);
         if (!option) return;
 
-        // Check emergency fund requirement (except for Savings Account)
-        if (investmentId !== 'savings-account' && !this.hasEmergencyFund) {
-            this.addNotification('🚨 Build ₱5,000 emergency fund first! Invest in Savings Account.', '⚠️');
+        // Check emergency fund requirement (except for Piggy Bank and Savings Account)
+        if (investmentId !== 'piggy-bank' && investmentId !== 'savings-account' && !this.hasEmergencyFund) {
+            this.addNotification('🚨 Build ₱5,000 emergency fund first! Use Piggy Bank.', '⚠️');
             return;
         }
 
@@ -892,8 +907,8 @@ class PinoyRPG {
 
         this.player.financials.cash -= amount;
 
-        // If Savings Account, add to emergency fund
-        if (investmentId === 'savings-account') {
+        // If Piggy Bank or Savings Account, add to emergency fund
+        if (investmentId === 'piggy-bank' || investmentId === 'savings-account') {
             this.player.financials.emergencyFund += amount;
             this.checkEmergencyFundStatus();
             this.addNotification(`Added ₱${amount.toLocaleString()} to Emergency Fund`, option.icon);

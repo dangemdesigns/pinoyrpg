@@ -140,7 +140,7 @@ class UIController {
             <div style="background: linear-gradient(135deg, #FF4757 0%, #FF6348 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
                 <div style="font-size: 14px; font-weight: 600; color: white; margin-bottom: 8px;">⚠️ EMERGENCY FUND REQUIRED</div>
                 <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">
-                    Build ₱5,000 emergency fund first by investing in Savings Account
+                    Build ₱5,000 emergency fund first using Piggy Bank
                 </div>
                 <div style="background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; height: 8px;">
                     <div style="background: #2ED573; height: 100%; width: ${emergencyFundProgress}%;"></div>
@@ -160,8 +160,8 @@ class UIController {
 
         investmentsGrid.innerHTML = emergencyBanner + game.investmentOptions.map(investment => {
             const canAfford = game.player.financials.cash >= investment.minInvestment;
-            const isSavingsAccount = investment.id === 'savings-account';
-            const isLocked = !isSavingsAccount && !game.hasEmergencyFund;
+            const isEmergencyFundOption = investment.id === 'piggy-bank' || investment.id === 'savings-account';
+            const isLocked = !isEmergencyFundOption && !game.hasEmergencyFund;
 
             return `
                 <div class="shop-item ${isLocked ? 'locked-item' : ''}">
@@ -184,7 +184,7 @@ class UIController {
                         <button class="btn-primary btn-small"
                                 onclick="ui.showInvestmentModal('${investment.id}')"
                                 ${!canAfford ? 'disabled' : ''}>
-                            ${isSavingsAccount ? 'Add to Emergency Fund' : 'Invest'}
+                            ${isEmergencyFundOption ? 'Add to Emergency Fund' : 'Invest'}
                         </button>
                     `}
                 </div>
