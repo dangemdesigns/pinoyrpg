@@ -97,8 +97,9 @@ class UIController {
         const jobsGrid = document.getElementById('jobs-grid');
 
         jobsGrid.innerHTML = game.jobMarket.map(job => {
-            const meetsReq = game.meetsEducationRequirement(job.requirements.education || 'High School');
+            const meetsReq = game.meetsEducationRequirement(job.requirements.education || 'None');
             const isCurrent = game.player.currentJob.title === job.title;
+            const showRequirement = job.requirements.education && job.requirements.education !== 'None';
 
             return `
                 <div class="shop-item ${isCurrent ? 'current-job' : ''}">
@@ -106,15 +107,17 @@ class UIController {
                     <div class="shop-item-name">${job.title}</div>
                     <div class="shop-item-desc">${job.description}</div>
                     <div class="shop-item-price">₱${job.salary.toLocaleString()}/month</div>
-                    <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 8px;">
-                        Required: ${job.requirements.education}
-                    </div>
+                    ${showRequirement ? `
+                        <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 8px;">
+                            Required: ${job.requirements.education}
+                        </div>
+                    ` : ''}
                     ${isCurrent ? `
                         <button class="btn-secondary btn-small" disabled>
                             Current Job
                         </button>
                     ` : `
-                        <button class="btn-primary btn-small"
+                        <button class="${meetsReq ? 'btn-primary' : 'btn-secondary'} btn-small"
                                 onclick="game.changeJob('${job.id}')"
                                 ${!meetsReq ? 'disabled' : ''}>
                             ${meetsReq ? 'Apply' : 'Locked'}
@@ -184,7 +187,7 @@ class UIController {
                         <button class="btn-primary btn-small"
                                 onclick="ui.showInvestmentModal('${investment.id}')"
                                 ${!canAfford ? 'disabled' : ''}>
-                            ${isEmergencyFundOption ? 'Add to Emergency Fund' : 'Invest'}
+                            ${isEmergencyFundOption ? 'Save Money' : 'Invest'}
                         </button>
                     `}
                 </div>
@@ -201,13 +204,38 @@ class UIController {
             document.getElementById('player-gold-business').textContent = Math.floor(game.player.financials.cash).toLocaleString();
         }
 
-        businessGrid.innerHTML = game.businessOpportunities.map(business => {
+        // Show business emergency fund status banner
+        const businessFundProgress = Math.min((game.player.financials.cash / game.businessEmergencyFundRequired) * 100, 100);
+        const businessBanner = !game.hasBusinessEmergencyFund ? `
+            <div style="background: linear-gradient(135deg, #FF4757 0%, #FF6348 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                <div style="font-size: 14px; font-weight: 600; color: white; margin-bottom: 8px;">⚠️ BUSINESS EMERGENCY FUND REQUIRED</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">
+                    Build ₱30,000 cash reserve first to protect your business from emergencies
+                </div>
+                <div style="background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; height: 8px;">
+                    <div style="background: #2ED573; height: 100%; width: ${businessFundProgress}%;"></div>
+                </div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 8px;">
+                    ₱${game.player.financials.cash.toLocaleString()} / ₱${game.businessEmergencyFundRequired.toLocaleString()}
+                </div>
+            </div>
+        ` : `
+            <div style="background: linear-gradient(135deg, #2ED573 0%, #26D07C 100%); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                <div style="font-size: 13px; font-weight: 600; color: white;">✅ Business Cash Reserve Ready: ₱${game.player.financials.cash.toLocaleString()}</div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.9); margin-top: 5px;">
+                    You can start businesses! Keep cash reserves for emergencies.
+                </div>
+            </div>
+        `;
+
+        businessGrid.innerHTML = businessBanner + game.businessOpportunities.map(business => {
             const canAfford = game.player.financials.cash >= business.initialCost;
             const meetsReq = business.requirements.entrepreneurship ?
                 game.player.attributes.entrepreneurship >= business.requirements.entrepreneurship : true;
+            const isLocked = !game.hasBusinessEmergencyFund;
 
             return `
-                <div class="shop-item">
+                <div class="shop-item ${isLocked ? 'locked-item' : ''}">
                     <div class="shop-item-icon">${business.icon}</div>
                     <div class="shop-item-name">${business.name}</div>
                     <div class="shop-item-desc">${business.description}</div>
@@ -215,11 +243,21 @@ class UIController {
                     <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">
                         Profit: ₱${business.monthlyProfit.toLocaleString()}/month
                     </div>
-                    <button class="btn-primary btn-small"
-                            onclick="game.startBusiness('${business.id}')"
-                            ${!canAfford || !meetsReq ? 'disabled' : ''}>
-                        ${!meetsReq ? 'Locked' : 'Start Business'}
-                    </button>
+                    ${isLocked ? `
+                        <div style="background: rgba(255,71,87,0.1); padding: 8px; border-radius: 6px; margin-bottom: 8px;">
+                            <div style="font-size: 10px; color: #FF4757; font-weight: 600;">🔒 LOCKED</div>
+                            <div style="font-size: 9px; color: var(--text-secondary);">Build ₱30k cash reserve first</div>
+                        </div>
+                        <button class="btn-secondary btn-small" disabled>
+                            Locked
+                        </button>
+                    ` : `
+                        <button class="${canAfford && meetsReq ? 'btn-primary' : 'btn-secondary'} btn-small"
+                                onclick="game.startBusiness('${business.id}')"
+                                ${!canAfford || !meetsReq ? 'disabled' : ''}>
+                            ${!meetsReq ? 'Locked' : 'Start Business'}
+                        </button>
+                    `}
                 </div>
             `;
         }).join('');
