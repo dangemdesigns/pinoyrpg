@@ -207,9 +207,9 @@ class PinoyRPG {
         const wasReady = this.hasEmergencyFund;
 
         // Calculate total emergency fund (includes active savings investments)
-        let totalEmergencyFund = this.player.financials.emergencyFund || 0;
+        let totalEmergencyFund = 0;
 
-        // Add active interest investments (savings account, time deposits, pag-ibig)
+        // Add active interest investments (savings account, digital bank, time deposits, pag-ibig)
         if (this.activeInvestments && this.activeInvestments.length > 0) {
             totalEmergencyFund += this.activeInvestments
                 .filter(inv => inv.type === 'interest')
@@ -217,7 +217,6 @@ class PinoyRPG {
         }
 
         this.hasEmergencyFund = totalEmergencyFund >= this.emergencyFundRequired;
-        this.player.financials.emergencyFund = totalEmergencyFund;
 
         // Notify if status changed
         if (wasReady && !this.hasEmergencyFund) {
@@ -1047,9 +1046,15 @@ class PinoyRPG {
     calculateNetWorth() {
         let netWorth = this.player.financials.cash || 0;
         netWorth += this.player.financials.savings || 0;
-        netWorth += this.player.financials.emergencyFund || 0;
 
-        // Add investment values
+        // Add active investments
+        if (this.activeInvestments && this.activeInvestments.length > 0) {
+            this.activeInvestments.forEach(inv => {
+                netWorth += inv.principal || 0;
+            });
+        }
+
+        // Add passive investment values
         this.investments.forEach(inv => {
             netWorth += inv.amount || 0;
         });
@@ -1096,7 +1101,14 @@ class PinoyRPG {
 
             switch (goal.type) {
                 case 'savings':
-                    goal.current = this.player.financials.emergencyFund;
+                    // Calculate current emergency fund (active interest investments)
+                    let currentEmergencyFund = 0;
+                    if (this.activeInvestments && this.activeInvestments.length > 0) {
+                        currentEmergencyFund = this.activeInvestments
+                            .filter(inv => inv.type === 'interest')
+                            .reduce((sum, inv) => sum + inv.principal, 0);
+                    }
+                    goal.current = currentEmergencyFund;
                     break;
                 case 'networth':
                     goal.current = this.player.financials.totalNetWorth;
@@ -1889,6 +1901,8 @@ class PinoyRPG {
 
         this.addNotification(`Withdrew ₱${total.toLocaleString()} from ${investment.name}!`, '💰');
         this.addActivityLog(`Withdrew ₱${total.toLocaleString()} from ${investment.name}`, '💰');
+        this.checkEmergencyFundStatus();
+        this.calculateNetWorth();
         this.updateUI();
         this.saveGame();
     }

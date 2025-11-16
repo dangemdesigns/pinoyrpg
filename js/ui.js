@@ -156,24 +156,32 @@ class UIController {
             document.getElementById('player-gold-invest').textContent = Math.floor(game.player.financials.cash).toLocaleString();
         }
 
+        // Calculate current emergency fund from active interest investments
+        let currentEmergencyFund = 0;
+        if (game.activeInvestments && game.activeInvestments.length > 0) {
+            currentEmergencyFund = game.activeInvestments
+                .filter(inv => inv.type === 'interest')
+                .reduce((sum, inv) => sum + inv.principal, 0);
+        }
+
         // Show emergency fund status banner
-        const emergencyFundProgress = Math.min((game.player.financials.emergencyFund / game.emergencyFundRequired) * 100, 100);
+        const emergencyFundProgress = Math.min((currentEmergencyFund / game.emergencyFundRequired) * 100, 100);
         const emergencyBanner = !game.hasEmergencyFund ? `
             <div style="background: linear-gradient(135deg, #FF4757 0%, #FF6348 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
                 <div style="font-size: 14px; font-weight: 600; color: white; margin-bottom: 8px;">⚠️ EMERGENCY FUND REQUIRED</div>
                 <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">
-                    Build ₱5,000 emergency fund first by investing in Savings Account
+                    Build ₱5,000 emergency fund first by investing in Savings Account or Digital Banking
                 </div>
                 <div style="background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; height: 8px;">
                     <div style="background: #2ED573; height: 100%; width: ${emergencyFundProgress}%;"></div>
                 </div>
                 <div style="font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 8px;">
-                    ₱${game.player.financials.emergencyFund.toLocaleString()} / ₱${game.emergencyFundRequired.toLocaleString()}
+                    ₱${currentEmergencyFund.toLocaleString()} / ₱${game.emergencyFundRequired.toLocaleString()}
                 </div>
             </div>
         ` : `
             <div style="background: linear-gradient(135deg, #2ED573 0%, #26D07C 100%); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
-                <div style="font-size: 13px; font-weight: 600; color: white;">✅ Emergency Fund Ready: ₱${game.player.financials.emergencyFund.toLocaleString()}</div>
+                <div style="font-size: 13px; font-weight: 600; color: white;">✅ Emergency Fund Ready: ₱${currentEmergencyFund.toLocaleString()}</div>
                 <div style="font-size: 11px; color: rgba(255,255,255,0.9); margin-top: 5px;">
                     All investments unlocked! Keep emergency fund topped up.
                 </div>
@@ -435,6 +443,8 @@ class UIController {
                     game.activeInvestments = game.activeInvestments.filter(inv => inv.id !== investment.id);
                     game.addNotification(`Auto-withdrawn ₱${total.toLocaleString()} from ${investment.name}!`, '💰');
                     game.addActivityLog(`${investment.name} matured: +₱${total.toLocaleString()}`, '💰');
+                    game.checkEmergencyFundStatus();
+                    game.calculateNetWorth();
                     game.saveGame();
                 }
             }
