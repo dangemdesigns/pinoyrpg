@@ -1169,11 +1169,12 @@ body {
     }
 
     .left-sidebar {
-        order: 1;
-        height: auto;
-        min-height: 100vh;
-        position: sticky;
+        position: fixed;
+        left: 0;
         top: 0;
+        height: 100vh;
+        z-index: 1000;
+        overflow-y: auto;
     }
 
     .main-content {
@@ -1182,6 +1183,7 @@ body {
         min-width: 0;
         height: auto;
         overflow-y: visible;
+        margin-left: var(--sidebar-left-width);
     }
 
     .right-sidebar {
@@ -1191,6 +1193,7 @@ body {
         border-top: 1px solid var(--border-color);
         max-height: 400px;
         height: auto;
+        margin-left: var(--sidebar-left-width);
     }
 
     .content-grid {
@@ -1208,23 +1211,30 @@ body {
         height: auto;
     }
 
+    .left-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
+        overflow-y: auto;
+    }
+
     .nav-text,
     .logo-text {
         display: none;
     }
 
-    .left-sidebar {
-        min-height: 100vh;
-    }
-
     .main-content {
         padding: var(--spacing-md);
         width: calc(100% - 60px);
+        margin-left: 60px;
         overflow-y: visible;
     }
 
     .right-sidebar {
-        width: 100%;
+        width: calc(100% - 60px);
+        margin-left: 60px;
         padding: var(--spacing-md);
         max-height: 300px;
     }
