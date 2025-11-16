@@ -1830,11 +1830,6 @@ class PinoyRPG {
     // ===================================
 
     createActiveInvestment(type, amount, investmentName = null, customInterestRate = null) {
-        if (amount < 5000) {
-            this.addNotification('Minimum investment is ₱5,000!', '❌');
-            return false;
-        }
-
         if (this.player.financials.cash < amount) {
             this.addNotification('Insufficient funds!', '❌');
             return false;

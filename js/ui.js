@@ -283,20 +283,37 @@ class UIController {
         if (!investment) return;
 
         const amount = prompt(
-            `How much would you like to invest in ${investment.name}?\n\n` +
-            `Minimum: ₱${investment.minInvestment.toLocaleString()}\n` +
-            `Your Cash: ₱${Math.floor(game.player.financials.cash).toLocaleString()}\n\n` +
-            `Enter amount:`,
-            investment.minInvestment
+            `💰 ${investment.name}\n\n` +
+            `Minimum Investment: ₱${investment.minInvestment.toLocaleString()}\n` +
+            `Expected Return: ${investment.expectedReturn}%\n` +
+            `Your Available Cash: ₱${Math.floor(game.player.financials.cash).toLocaleString()}\n\n` +
+            `Enter amount to invest (numbers only):`,
+            ''
         );
 
-        if (amount) {
-            const numAmount = parseInt(amount.replace(/,/g, ''));
-            if (!isNaN(numAmount) && numAmount > 0) {
-                game.makeInvestment(investmentId, numAmount);
-                this.renderInvestmentsView();
-            }
+        if (amount === null || amount.trim() === '') {
+            return; // User cancelled
         }
+
+        const numAmount = parseInt(amount.replace(/,/g, '').trim());
+
+        if (isNaN(numAmount)) {
+            alert('❌ Please enter a valid number');
+            return;
+        }
+
+        if (numAmount < investment.minInvestment) {
+            alert(`❌ Minimum investment is ₱${investment.minInvestment.toLocaleString()}`);
+            return;
+        }
+
+        if (numAmount > game.player.financials.cash) {
+            alert(`❌ Not enough cash! You have ₱${Math.floor(game.player.financials.cash).toLocaleString()}`);
+            return;
+        }
+
+        game.makeInvestment(investmentId, numAmount);
+        this.renderInvestmentsView();
     }
 
     createTimedInvestment(type) {
