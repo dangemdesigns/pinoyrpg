@@ -250,7 +250,7 @@ class PinoyRPG {
         return {
             name: 'Juan dela Cruz',
             age: 22,
-            education: 'High School Graduate',
+            education: 'High School',
             currentJob: {
                 title: 'Informal Sector Worker',
                 monthlySalary: 10000,
